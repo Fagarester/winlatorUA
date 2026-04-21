@@ -1,5 +1,5 @@
 name: Build WinlatorUA
-on: [push, workflow_dispatch]
+on: [workflow_dispatch] # Теперь только кнопка в Actions
 
 jobs:
   build:
