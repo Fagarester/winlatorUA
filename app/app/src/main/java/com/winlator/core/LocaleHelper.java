@@ -15,7 +15,7 @@ public class LocaleHelper {
         "fr_FR", "bn_BD", "pt_BR", "ru_RU", "ja_JP", 
         "be_BY", "de_DE", "jv_ID", "ko_KR", "kk_KZ", 
         "vi_VN", "mr_IN", "ta_IN", "tr_TR", "ur_PK", 
-        "it_IT", "th_TH", "gu_IN", "kn_IN", "ml_IN", 
+        "it_IT", "th_TH", "gu_IN", "kn_IN", "rr_RR", 
         "uk_UA", "pl_PL", "ro_RO", "nl_NL", "hu_HU"
     };
 
