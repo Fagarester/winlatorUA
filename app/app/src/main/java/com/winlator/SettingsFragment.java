@@ -127,6 +127,7 @@ public class SettingsFragment extends Fragment {
         
 int currentTheme = preferences.getInt("app_theme", APP_THEME_DARK);
 int oldAppThemeId;
+int newAppThemeId;
 
 if (currentTheme == APP_THEME_LIGHT) {
     oldAppThemeId = R.id.RBLight;
