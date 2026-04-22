@@ -56,12 +56,35 @@
         <item name="preloaderBackground">@drawable/preloader_background_dark</item>
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
+        <style name="AppThemeDark1" parent="@style/AppThemeBase">
+        <item name="colorAccent">#0288d1</item>
+        <item name="colorPrimary">#505963</item>
+        <item name="colorPrimaryDark">#3f474f</item>
+        <item name="colorControlNormal">#616161</item>
+        <item name="colorPrimaryText">#fafafa</item>
+        <item name="colorSecondaryText">#9e9e9e</item>
+        <item name="colorPrimarySurface">#1b1e21</item>
+        <item name="colorSecondarySurface">#2d3238</item>
+        <item name="colorPrimaryVariant">#ffe60303</item>
+        <item name="colorSecondaryVariant">#37424f</item>
+        <item name="colorError">#ef5350</item>
+        <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
+        <item name="toolboxBackground">@drawable/toolbox_dark</item>
+        <item name="panelBackground">@drawable/panel_background_dark</item>
+        <item name="preloaderBackground">@drawable/preloader_background_dark</item>
+        <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
+    </style>
     <style name="AppThemeFullscreenLight" parent="@style/AppThemeLight">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>
     </style>
     <style name="AppThemeFullscreenDark" parent="@style/AppThemeDark">
+        <item name="android:windowFullscreen">true</item>
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:windowTranslucentNavigation">true</item>
+    </style>
+        <style name="AppThemeFullscreenDark1" parent="@style/AppThemeDark1">
         <item name="android:windowFullscreen">true</item>
         <item name="android:windowTranslucentStatus">true</item>
         <item name="android:windowTranslucentNavigation">true</item>

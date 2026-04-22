@@ -384,5 +384,8 @@ public abstract class AppUtils {
         else if (appTheme == SettingsFragment.APP_THEME_DARK) {
             activity.setTheme(R.style.AppThemeDark);
         }
+        else if (appTheme == SettingsFragment.APP_THEME_DARK1) {
+            activity.setTheme(R.style.AppThemeDark1);
+        }
     }
 }

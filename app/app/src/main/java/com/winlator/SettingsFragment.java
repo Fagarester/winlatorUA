@@ -68,6 +68,7 @@ public class SettingsFragment extends Fragment {
     public static final String DEFAULT_WINE_DEBUG_CHANNELS = "warn,err,fixme";
     public static final byte APP_THEME_LIGHT = 0;
     public static final byte APP_THEME_DARK = 1;
+    public static final byte APP_THEME_DARK1 = 2;
     private Callback<Uri> selectWineFileCallback;
     private PreloaderDialog preloaderDialog;
     private SharedPreferences preferences;
@@ -122,9 +123,21 @@ public class SettingsFragment extends Fragment {
         final Spinner sBox64Preset = view.findViewById(R.id.SBox64Preset);
         loadBox64PresetSpinner(view, sBox64Preset);
 
-        final RadioGroup rgAppTheme = view.findViewById(R.id.RGAppTheme);
-        final int oldAppThemeId = preferences.getInt("app_theme", APP_THEME_DARK) == APP_THEME_DARK ? R.id.RBDark : R.id.RBLight;
-        rgAppTheme.check(oldAppThemeId);
+int currentTheme = preferences.getInt("app_theme", APP_THEME_DARK);
+int oldAppThemeId;
+
+if (currentTheme == APP_THEME_LIGHT) {
+    oldAppThemeId = R.id.RBLight;
+} else if (currentTheme == APP_THEME_DARK) {
+    oldAppThemeId = R.id.RBDark;
+} else if (currentTheme == APP_THEME_DARK1) { // Проверяем твою тему
+    oldAppThemeId = R.id.RBDark1;
+} else {
+    oldAppThemeId = R.id.RBDark; // Дефолт
+}
+
+rgAppTheme.check(oldAppThemeId);
+
 
         final CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
         cbMoveCursorToTouchpoint.setChecked(preferences.getBoolean("move_cursor_to_touchpoint", false));
@@ -204,8 +217,20 @@ public class SettingsFragment extends Fragment {
             editor.putBoolean("use_android_clipboard_on_wine", cbUseAndroidClipboardOnWine.isChecked());
             putGamepadPlayerConfigs(view, editor);
 
-            int newAppThemeId = rgAppTheme.getCheckedRadioButtonId();
-            editor.putInt("app_theme", newAppThemeId == R.id.RBLight ? APP_THEME_LIGHT : APP_THEME_DARK);
+int newTheme;
+int checkedId = rgAppTheme.getCheckedRadioButtonId();
+
+if (checkedId == R.id.RBLight) {
+    newTheme = APP_THEME_LIGHT;
+} else if (checkedId == R.id.RBDark) {
+    newTheme = APP_THEME_DARK;
+} else if (checkedId == R.id.RBDark1) {
+    newTheme = APP_THEME_DARK1;
+} else {
+    newTheme = APP_THEME_DARK;
+}
+
+editor.putInt("app_theme", newTheme);
 
             int newLCIndex = sLanguage.getSelectedItemPosition();
             editor.putInt("lc_index", newLCIndex);
