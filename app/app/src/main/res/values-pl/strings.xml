@@ -1,292 +1,350 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">Winlator</string>
-    <string name="run">Запустити</string>
-    <string name="edit">Редагувати</string>
-    <string name="remove">Видалити</string>
-    <string name="add">Додати</string>
-    <string name="shortcuts">Ярлики</string>
-    <string name="containers">Контейнери</string>
-    <string name="input_controls">Керування введенням</string>
-    <string name="no_items_to_display">Немає елементів для відображення</string>
-    <string name="new_container">Новий контейнер</string>
-    <string name="edit_container">Редагувати контейнер</string>
-    <string name="creating_container">Створення контейнера...</string>
-    <string name="removing_container">Видалення контейнера...</string>
-    <string name="duplicating_container">Дублювання контейнера...</string>
-    <string name="installing_system_files">Встановлення системних файлів...</string>
-    <string name="updating_system_files">Оновлення системних файлів...</string>
-    <string name="starting_up">Запуск...</string>
-    <string name="unable_to_install_system_files">Неможливо встановити системні файли</string>
-    <string name="keyboard">Клавіатура</string>
-    <string name="toggle_fullscreen">Повний екран</string>
-    <string name="exit">Вихід</string>
-    <string name="no_control_element_selected">Елемент керування не вибрано</string>
-    <string name="scale">Масштаб</string>
-    <string name="shape">Форма</string>
-    <string name="type">Тип</string>
-    <string name="binding">Прив\'язка</string>
-    <string name="binding_up">Прив\'язка Вгору</string>
-    <string name="binding_right">Прив\'язка Вправо</string>
-    <string name="binding_down">Прив\'язка Вниз</string>
-    <string name="binding_left">Прив\'язка Вліво</string>
-    <string name="overlay_opacity">Прозорість оверлея</string>
-    <string name="opacity">Прозорість</string>
-    <string name="profile">Профіль</string>
-    <string name="select_profile">Вибрати профіль</string>
-    <string name="profile_name">Ім\'я профілю</string>
-    <string name="name">Ім\'я</string>
+    <string name="run">Uruchom</string>
+    <string name="edit">Edytuj</string>
+    <string name="remove">Usuń</string>
+    <string name="add">Dodaj</string>
+    <string name="shortcuts">Skróty</string>
+    <string name="containers">Kontenery</string>
+    <string name="input_controls">Sterowanie wejściem</string>
+    <string name="no_items_to_display">Brak elementów do wyświetlenia</string>
+    <string name="new_container">Nowy kontener</string>
+    <string name="edit_container">Edytuj kontener</string>
+    <string name="creating_container">Tworzenie kontenera…</string>
+    <string name="removing_container">Usuwanie kontenera…</string>
+    <string name="duplicating_container">Duplikowanie kontenera…</string>
+    <string name="installing_system_files">Instalowanie plików systemowych…</string>
+    <string name="updating_system_files">Aktualizowanie plików systemowych…</string>
+    <string name="starting_up">Uruchamianie…</string>
+    <string name="unable_to_install_system_files">Nie można zainstalować plików systemowych</string>
+    <string name="keyboard">Klawiatura</string>
+    <string name="toggle_fullscreen">Przełącz pełny ekran</string>
+    <string name="exit">Wyjdź</string>
+    <string name="no_control_element_selected">Nie wybrano elementu sterującego</string>
+    <string name="scale">Skala</string>
+    <string name="shape">Kształt</string>
+    <string name="type">Typ</string>
+    <string name="binding">Przypisanie</string>
+    <string name="binding_up">Przypisanie góra</string>
+    <string name="binding_right">Przypisanie prawo</string>
+    <string name="binding_down">Przypisanie dół</string>
+    <string name="binding_left">Przypisanie lewo</string>
+    <string name="overlay_opacity">Przezroczystość nakładki</string>
+    <string name="opacity">Przezroczystość</string>
+    <string name="profile">Profil</string>
+    <string name="select_profile">Wybierz profil</string>
+    <string name="profile_name">Nazwa profilu</string>
+    <string name="name">Nazwa</string>
     <string name="ok">OK</string>
-    <string name="cancel">Скасувати</string>
-    <string name="untitled">Без назви</string>
-    <string name="no_profile_selected">Профіль не вибрано</string>
-    <string name="no_profile_found">Профіль не знайдено</string>
-    <string name="do_you_want_to_remove_this_profile">Ви хочете видалити цей профіль?</string>
-    <string name="do_you_want_to_duplicate_this_profile">Ви хочете дублювати цей профіль?</string>
-    <string name="do_you_want_to_duplicate_this_preset">Ви хочете дублювати це пресет?</string>
-    <string name="do_you_want_to_remove_this_container">Ви хочете видалити цей контейнер?</string>
-    <string name="do_you_want_to_duplicate_this_container">Ви хочете дублювати цей контейнер?</string>
-    <string name="do_you_want_to_remove_this_file">Ви хочете видалити цей файл?</string>
-    <string name="do_you_want_to_remove_this_controller">Ви хочете видалити цей контролер?</string>
-    <string name="do_you_want_to_remove_this_wine_version">Ви хочете видалити цю версію Wine?</string>
-    <string name="do_you_want_to_remove_this_preset">Ви хочете видалити пресет?</string>
-    <string name="do_you_want_to_remove_this_component_version">Ви хочете видалити цю версію компонента?</string>
-    <string name="do_you_want_to_end_this_process">Ви хочете завершити процес?</string>
-    <string name="controls_editor">Редактор керування</string>
-    <string name="enabled">Увімкнено</string>
-    <string name="disabled">Вимкнено</string>
-    <string name="container">Контейнер</string>
-    <string name="screen_size">Розмір екрана</string>
-    <string name="new_environment_variable">Нова змінна середовища</string>
-    <string name="environment_variables">Змінні середовища</string>
-    <string name="value">Значення</string>
-    <string name="processor_affinity">Відповідність процесорів</string>
-    <string name="processor_affinity_32_bit_apps">Відповідність процесорів (32-bit)</string>
-    <string name="cursor_speed">Швидкість курсора</string>
-    <string name="relative_mouse_movement">Відносний рух миші</string>
-    <string name="toggle_switch">Режим перемикача</string>
-    <string name="profile_exported_to">Профіль експортовано в</string>
-    <string name="unable_to_import_profile">Неможливо імпортувати профіль</string>
-    <string name="wine_configuration">Конфігурація Wine</string>
-    <string name="enable_csmt">Увімкнути CSMT (Command Stream Multi-Thread)</string>
-    <string name="gpu_name">Ім\'я GPU</string>
-    <string name="offscreen_rendering_mode">Режим позаекранного рендерингу</string>
-    <string name="enable_strict_shader_math">Увімкнути Strict Shader Math</string>
-    <string name="video_memory_size">Обсяг відеопам\'яті</string>
-    <string name="none">Нічого</string>
-    <string name="custom_text">Власний текст</string>
-    <string name="icon">Іконка</string>
-    <string name="import_profile">Імпорт профілю</string>
-    <string name="export_profile">Експорт профілю</string>
-    <string name="touchpad_help">Підказки для тачпада</string>
-    <string name="touchpad_help_mouse_left_click_title">Клік лівою кнопкою миші</string>
-    <string name="touchpad_help_mouse_left_click_description">Коротко натисніть одним пальцем</string>
-    <string name="touchpad_help_mouse_right_click_title">Клік правою кнопкою миші</string>
-    <string name="touchpad_help_mouse_right_click_description">Натисніть одним пальцем і коротко натисніть іншим пальцем</string>
-    <string name="touchpad_help_mouse_scroll_wheel_title">Колесо прокручування миші</string>
-    <string name="touchpad_help_mouse_scroll_wheel_description">Натисніть двома пальцями і рухайте</string>
-    <string name="touchpad_help_main_menu_title">Головне меню</string>
-    <string name="touchpad_help_main_menu_description">Натисніть чотирма пальцями</string>
-    <string name="duplicate">Дублювати</string>
-    <string name="about">Про програму</string>
-    <string name="credits_and_third_party_apps">Автори та сторонні додатки</string>
-    <string name="external_controllers">Зовнішні контролери</string>
-    <string name="graphics_driver">Графічний драйвер</string>
-    <string name="audio_driver">Аудіодрайвер</string>
-    <string name="loading">Завантаження...</string>
-    <string name="press_any_button_on_your_controller">Натисніть будь-яку кнопку на вашому контролері</string>
-    <string name="bindings">прив\'язки</string>
-    <string name="show_touchscreen_controls">Показати елементи керування сенсорним екраном</string>
-    <string name="settings">Налаштування</string>
-    <string name="drives">Диски</string>
-    <string name="drive">Диск</string>
-    <string name="force_fullscreen">Повноекранний режим</string>
-    <string name="range">Діапазон</string>
-    <string name="enable">Увімкнути</string>
-    <string name="disable">Вимкнути</string>
-    <string name="force">Примусово</string>
-    <string name="install_wine">Встановлення Wine</string>
-    <string name="version">Версія</string>
-    <string name="unable_to_install_wine">Неможливо встановити Wine</string>
-    <string name="unable_to_remove_this_wine_version">Неможливо видалити цю версію Wine</string>
-    <string name="wine_version">Версія Wine</string>
-    <string name="removing_wine">Видалення Wine...</string>
-    <string name="preparing_installation">Підготовка до встановлення...</string>
-    <string name="finishing_installation">Завершення встановлення...</string>
-    <string name="storage_info">Інформація про сховище</string>
-    <string name="drive_c">Диск C:</string>
-    <string name="total">Всього</string>
-    <string name="clear_cache">Очистити кеш</string>
-    <string name="estimated_used_space">Розрахунковий зайнятий простір</string>
-    <string name="advanced">Додаткові</string>
-    <string name="system">Система</string>
-    <string name="box64_preset">Пресет Box64</string>
-    <string name="box64_version">Версія Box64</string>
-    <string name="letter">Буква</string>
-    <string name="target_path">Шлях до диска</string>
-    <string name="width">Ширина</string>
-    <string name="height">Висота</string>
-    <string name="old">старий</string>
-    <string name="_new">новий</string>
-    <string name="task_manager">Диспетчер завдань</string>
-    <string name="process_name">Ім\'я процесу</string>
-    <string name="memory">Пам\'ять</string>
-    <string name="battery">Акумулятор</string>
-    <string name="end_process">Завершити процес</string>
-    <string name="new_task">Нове завдання</string>
-    <string name="processes">Процеси</string>
-    <string name="orientation">Орієнтація</string>
-    <string name="horizontal">Горизонтальна</string>
-    <string name="vertical">Вертикальна</string>
-    <string name="open_file">Відкрити файл</string>
-    <string name="download_file">Завантажити файл</string>
-    <string name="do_you_want_to_download_the_selected_profiles">Бажаєте завантажити вибрані профілі?</string>
-    <string name="downloading_file">Завантаження файлу...</string>
-    <string name="a_network_error_occurred">Сталася помилка мережі</string>
-    <string name="copy">Копіювати</string>
-    <string name="installed_version">Встановлена версія</string>
-    <string name="unable_to_download_file">Неможливо завантажити файл</string>
-    <string name="stability">Стабільність</string>
-    <string name="conservative">Консервативний</string>
-    <string name="intermediate">Середній</string>
-    <string name="performance">продуктивність</string>
-    <string name="preset">Пресет</string>
-    <string name="you_cannot_remove_this_preset">Ви не можете видалити цей пресет</string>
-    <string name="you_cannot_remove_this_component_version">Ви не можете видалити цю версію компонента</string>
+    <string name="cancel">Anuluj</string>
+    <string name="untitled">Bez tytułu</string>
+    <string name="no_profile_selected">Nie wybrano profilu</string>
+    <string name="no_profile_found">Nie znaleziono profilu</string>
+    <string name="do_you_want_to_remove_this_profile">Czy chcesz usunąć ten profil?</string>
+    <string name="do_you_want_to_duplicate_this_profile">Czy chcesz zduplikować ten profil?</string>
+    <string name="do_you_want_to_duplicate_this_preset">Czy chcesz zduplikować to ustawienie wstępne?</string>
+    <string name="do_you_want_to_remove_this_container">Czy chcesz usunąć ten kontener?</string>
+    <string name="do_you_want_to_duplicate_this_container">Czy chcesz zduplikować ten kontener?</string>
+    <string name="do_you_want_to_remove_this_file">Czy chcesz usunąć ten plik?</string>
+    <string name="do_you_want_to_remove_this_controller">Czy chcesz usunąć ten kontroler?</string>
+    <string name="do_you_want_to_remove_this_wine_version">Czy chcesz usunąć tę wersję Wine?</string>
+    <string name="do_you_want_to_remove_this_preset">Czy chcesz usunąć to ustawienie wstępne?</string>
+    <string name="do_you_want_to_remove_this_component_version">Czy chcesz usunąć tę wersję komponentu?</string>
+    <string name="do_you_want_to_end_this_process">Czy chcesz zakończyć ten proces?</string>
+    <string name="controls_editor">Edytor sterowania</string>
+    <string name="enabled">Włączono</string>
+    <string name="disabled">Wyłączono</string>
+    <string name="container">Kontener</string>
+    <string name="screen_size">Rozmiar ekranu</string>
+    <string name="new_environment_variable">Nowa zmienna środowiskowa</string>
+    <string name="environment_variables">Zmienne środowiskowe</string>
+    <string name="value">Wartość</string>
+    <string name="processor_affinity">Koligacja procesora</string>
+    <string name="processor_affinity_32_bit_apps">Koligacja procesora (aplikacje 32-bitowe)</string>
+    <string name="cursor_speed">Prędkość kursora</string>
+    <string name="relative_mouse_movement">Względny ruch myszy</string>
+    <string name="toggle_switch">Przełącznik</string>
+    <string name="profile_exported_to">Profil wyeksportowano do</string>
+    <string name="unable_to_import_profile">Nie można zaimportować profilu</string>
+    <string name="wine_configuration">Konfiguracja Wine</string>
+    <string name="enable_csmt">Włącz CSMT (Command Stream Multi-Thread)</string>
+    <string name="gpu_name">Nazwa GPU</string>
+    <string name="offscreen_rendering_mode">Tryb renderowania poza ekranem</string>
+    <string name="enable_strict_shader_math">Włącz ścisłą matematykę shaderów</string>
+    <string name="video_memory_size">Rozmiar pamięci wideo</string>
+    <string name="none">Brak</string>
+    <string name="custom_text">Niestandardowy tekst</string>
+    <string name="icon">Ikona</string>
+    <string name="import_profile">Importuj profil</string>
+    <string name="export_profile">Eksportuj profil</string>
+    <string name="touchpad_help">Pomoc touchpada</string>
+    <string name="touchpad_help_mouse_left_click_title">Lewy przycisk myszy</string>
+    <string name="touchpad_help_mouse_left_click_description">Krótkie stuknięcie jednym palcem</string>
+    <string name="touchpad_help_mouse_right_click_title">Prawy przycisk myszy</string>
+    <string name="touchpad_help_mouse_right_click_description">Stuknięcie jednym palcem i krótkie stuknięcie drugim palcem</string>
+    <string name="touchpad_help_mouse_scroll_wheel_title">Kółko przewijania myszy</string>
+    <string name="touchpad_help_mouse_scroll_wheel_description">Stuknięcie dwoma palcami i przesunięcie</string>
+    <string name="touchpad_help_main_menu_title">Menu główne</string>
+    <string name="touchpad_help_main_menu_description">Stuknięcie czterema palcami</string>
+    <string name="duplicate">Duplikuj</string>
+    <string name="about">O aplikacji</string>
+    <string name="credits_and_third_party_apps">Podziękowania i aplikacje firm trzecich</string>
+    <string name="external_controllers">Zewnętrzne kontrolery</string>
+    <string name="graphics_driver">Sterownik graficzny</string>
+    <string name="audio_driver">Sterownik audio</string>
+    <string name="loading">Ładowanie…</string>
+    <string name="press_any_button_on_your_controller">Naciśnij dowolny przycisk na kontrolerze</string>
+    <string name="bindings">Przypisania klawiszy</string>
+    <string name="show_touchscreen_controls">Pokaż sterowanie dotykowe</string>
+    <string name="dxwrapper" translatable="false">DX Wrapper</string>
+    <string name="mouse_warp_override" translatable="false">Mouse Warp Override</string>
+    <string name="direct3d" translatable="false">Direct3D</string>
+    <string name="directsound" translatable="false">DirectSound</string>
+    <string name="directmusic" translatable="false">DirectMusic</string>
+    <string name="directplay" translatable="false">DirectPlay</string>
+    <string name="directshow" translatable="false">DirectShow</string>
+    <string name="directinput" translatable="false">DirectInput</string>
+    <string name="xaudio" translatable="false">XAudio</string>
+    <string name="directx" translatable="false">DirectX</string>
+    <string name="vcrun2005" translatable="false">Visual C++ 2005</string>
+    <string name="vcrun2010" translatable="false">Visual C++ 2010</string>
+    <string name="wmdecoder" translatable="false">Windows Media Decoder</string>
+    <string name="settings">Ustawienia</string>
+    <string name="exec_arguments" translatable="false">Exec Arguments</string>
+    <string name="win_components" translatable="false">Win Components</string>
+    <string name="drives">Dyski</string>
+    <string name="drive">Dysk</string>
+    <string name="force_fullscreen">Wymuś pełny ekran</string>
+    <string name="range">Zakres</string>
+    <string name="enable">Włącz</string>
+    <string name="disable">Wyłącz</string>
+    <string name="force">Wymuś</string>
+    <string name="install_wine">Zainstaluj Wine</string>
+    <string name="version">Wersja</string>
+    <string name="unable_to_install_wine">Nie można zainstalować Wine</string>
+    <string name="unable_to_remove_this_wine_version">Nie można usunąć tej wersji Wine</string>
+    <string name="wine_version">Wersja Wine</string>
+    <string name="removing_wine">Usuwanie Wine…</string>
+    <string name="preparing_installation">Przygotowywanie instalacji…</string>
+    <string name="finishing_installation">Kończenie instalacji…</string>
+    <string name="storage_info">Informacje o pamięci</string>
+    <string name="drive_c">Dysk C:</string>
+    <string name="cache" translatable="false">Cache</string>
+    <string name="total">Łącznie</string>
+    <string name="clear_cache">Wyczyść pamięć podręczną</string>
+    <string name="estimated_used_space">Szacowane zajęte miejsce</string>
+    <string name="advanced">Zaawansowane</string>
+    <string name="box64" translatable="false">Box64</string>
+    <string name="system">System</string>
+    <string name="box64_preset">Ustawienie wstępne Box64</string>
+    <string name="box64_version">Wersja Box64</string>
+    <string name="letter">Litera</string>
+    <string name="target_path">Ścieżka docelowa</string>
+    <string name="width">Szerokość</string>
+    <string name="height">Wysokość</string>
+    <string name="old">Stary</string>
+    <string name="_new">Nowy</string>
+    <string name="task_manager">Menedżer zadań</string>
+    <string name="process_name">Nazwa procesu</string>
+    <string name="pid" translatable="false">PID</string>
+    <string name="memory">Pamięć</string>
+    <string name="battery">Bateria</string>
+    <string name="end_process">Zakończ proces</string>
+    <string name="new_task">Nowe zadanie</string>
+    <string name="processes">Procesy</string>
+    <string name="orientation">Orientacja</string>
+    <string name="horizontal">Pozioma</string>
+    <string name="vertical">Pionowa</string>
+    <string name="open_file">Otwórz plik</string>
+    <string name="download_file">Pobierz plik</string>
+    <string name="do_you_want_to_download_the_selected_profiles">Czy chcesz pobrać wybrane profile?</string>
+    <string name="downloading_file">Pobieranie pliku…</string>
+    <string name="a_network_error_occurred">Wystąpił błąd sieci</string>
+    <string name="copy">Kopiuj</string>
+    <string name="installed_version">Zainstalowana wersja</string>
+    <string name="unable_to_download_file">Nie można pobrać pliku</string>
+    <string name="stability">Stabilność</string>
+    <string name="conservative">Konserwatywny</string>
+    <string name="intermediate">Pośredni</string>
+    <string name="performance">Wydajność</string>
+    <string name="preset">Ustawienie wstępne</string>
+    <string name="you_cannot_remove_this_preset">Nie można usunąć tego ustawienia wstępnego</string>
+    <string name="you_cannot_remove_this_component_version">Nie można usunąć tej wersji komponentu</string>
     <string name="dxwrapper_help_content"><![CDATA[
-        <i><b>WineD3D</b></i> є шаром трансляції DirectX 1-11 в OpenGL.<br /><br />
-        <i><b>DXVK</b></i> є шаром трансляції Direct3D 9-11 у Vulkan.<br /><br />
-        <i><b>VKD3D</b></i> є шаром трансляції Direct3D 12 API у Vulkan.<br /><br />
-        <i><b>CNC DDraw</b></i> є реалізацією DirectDraw для кращої сумісності з класичними іграми.
+        <i><b>WineD3D</b></i> to warstwa translacji dla DirectX 1–11 do OpenGL.<br /><br />
+        <i><b>DXVK</b></i> to warstwa translacji dla Direct3D 9–11 do Vulkan.<br /><br />
+        <i><b>VKD3D</b></i> to warstwa translacji dla API Direct3D 12 do Vulkan.<br /><br />
+        <i><b>CNC DDraw</b></i> to implementacja DirectDraw zapewniająca lepszą kompatybilność z klasycznymi grami.
     ]]></string>
-    <string name="columns">Стовпці</string>
-    <string name="directinput_mapper_type">Тип мапера DirectInput</string>
-    <string name="desktop">Робочий стіл</string>
-    <string name="theme">Тема</string>
-    <string name="background">Фон</string>
-    <string name="max_device_memory">Максимальний обсяг пам\'яті</string>
-    <string name="frame_rate">Частота кадрів</string>
-    <string name="configuration">Конфігурація</string>
-    <string name="browse">Огляд</string>
-    <string name="magnifier">Лупа</string>
-    <string name="bring_to_front">Винести на передній план</string>
-    <string name="options">Опції</string>
-    <string name="logs">Логи</string>
-    <string name="enable_wine_debug">Увімкнути налагодження Wine</string>
-    <string name="box64_logs">Логи Box64</string>
-    <string name="export">Експорт</string>
-    <string name="logs_exported_to">Логи експортовано в</string>
-    <string name="general">Загальні</string>
-    <string name="startup_selection">Тип запуску</string>
-    <string name="wine_debug_channel">Канал налагодження Wine</string>
-    <string name="save_logs_to_file">Зберегти журнали у файл</string>
-    <string name="new_folder">Нова папка</string>
-    <string name="view_style">Стиль вигляду</string>
-    <string name="there_already_file_with_that_name">Файл із таким ім\'ям вже існує</string>
-    <string name="cut">Вирізати</string>
-    <string name="copying_files">Копіювання файлів...</string>
-    <string name="removing_files">Видалення файлів...</string>
-    <string name="disable_mouse_input">Вимкнути введення мишею</string>
-    <string name="move_cursor_to_touchpoint">Переміщати курсор у точку дотику</string>
-    <string name="sync_every_frame">Синхронізувати кожен кадр</string>
-    <string name="dpi_font_size">DPI (Розмір шрифту)</string>
-    <string name="preferred_input_api">Пріоритетний API введення</string>
-    <string name="file_manager">Файловий менеджер</string>
-    <string name="documents">Документи</string>
-    <string name="items">Елементи</string>
-    <string name="you_cannot_paste_files_here">Сюди не можна вставляти файли</string>
-    <string name="information">Інформація</string>
-    <string name="rename">Перейменувати</string>
-    <string name="location">Розташування</string>
-    <string name="file">Файл</string>
-    <string name="folder">Папка</string>
-    <string name="size">Розмір</string>
-    <string name="modified">Змінено</string>
-    <string name="contains">Містить</string>
-    <string name="favorites">Обране</string>
-    <string name="add_to_favorites">Додати в обране</string>
-    <string name="file_added_to_favorites">Файл додано в обране</string>
-    <string name="game_controllers">Ігрові контролери</string>
-    <string name="home">Головна</string>
-    <string name="custom_device">Власний пристрій</string>
-    <string name="reinstall_system_files">Перевстановити системні файли</string>
-    <string name="do_you_want_to_reinstall_system_files">Бажаєте перевстановити системні файли?</string>
-    <string name="mouse">Миша</string>
-    <string name="cursor_size">Розмір курсора</string>
-    <string name="color">Колір</string>
-    <string name="volume">Гучність</string>
-    <string name="average_latency">Середня затримка</string>
-    <string name="performance_mode">Режим продуктивності</string>
-    <string name="audio">Аудіо</string>
-    <string name="opengl_version">Версія OpenGL</string>
-    <string name="disable_vertex_array_bgra">Заборонити vertex array BGRA</string>
-    <string name="screen_effect">Ефект екрана</string>
-    <string name="enable_fxaa">Увімкнути FXAA</string>
-    <string name="brightness">Яскравість</string>
-    <string name="contrast">Контрастність</string>
-    <string name="gamma">Гамма</string>
-    <string name="color_adjustment">Регулювання кольору</string>
-    <string name="reset">Скинути</string>
-    <string name="enable_crt_shader">Увімкнути CRT Shader</string>
-    <string name="open_directory">Відкрити каталог</string>
-    <string name="locations">Місця</string>
-    <string name="downloads">Завантаження</string>
-    <string name="internal_storage">Внутрішнє сховище</string>
-    <string name="windows_version">Версія Windows</string>
-    <string name="install_component">Встановити компонент</string>
-    <string name="open_android_browser_from_wine">Відкривати браузер Android із Wine</string>
-    <string name="use_android_clipboard_on_Wine">Використовувати буфер обміну Android у Wine</string>
-    <string name="capture_pointer_on_external_mouse">Захоплення вказівника зовнішньої миші</string>
-    <string name="there_are_no_items_to_download">Немає елементів для завантаження.</string>
-    <string name="enable_direct_rendering">Увімкнути прямий рендеринг</string>
-    <string name="d3d_feature_level">Рівень функцій D3D</string>
-    <string name="system_font">Системний шрифт</string>
-    <string name="vulkan_version">Версія Vulkan</string>
-    <string name="exposed_extensions">Відкриті розширення</string>
-    <string name="multiselection_combobox_display_text">%d з %d елементів</string>
-    <string name="voltage">Напруга</string>
-    <string name="current">Струм</string>
-    <string name="capacity">Ємність</string>
-    <string name="sound">Звук</string>
+    <string name="box64_env_var_help__dynarec_safeflags" translatable="false"><![CDATA[
+        Handling of flags on CALL/RET opcodes<br /><br />
+        <b>0</b> : Treats CALL/RET as if it never needed flags (faster, unstable)<br />
+        <b>1</b> : Most RET will need flags, most CALLS will not<br />
+        <b>2</b> : All CALL/RET will need flags (slower)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_fastnan" translatable="false">Generation of -NAN like on x86</string>
+    <string name="box64_env_var_help__dynarec_fastround" translatable="false"><![CDATA[
+        Generation of precise x86 rounding<br /><br />
+        <b>0</b> : Generate float/double -> int rounding like on x86<br />
+        <b>1</b> : Don\'t do anything special with edge case Rounding, to go as fast as possible (no INF/NAN/Overflow -> MIN_INT conversion)<br />
+        <b>2</b> : Everything from 1 plus also fast round of double -> float (not taking into account current rounding mode)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_x87double" translatable="false">Use of Float/Double for x87 emulation</string>
+    <string name="box64_env_var_help__dynarec_bigblock" translatable="false"><![CDATA[
+        Dynarec building BigBlock<br /><br />
+        <b>0</b> : Don\'t try to build block as big as possible<br />
+        <b>1</b> : Build Dynarec block as big as possible<br />
+        <b>2</b> : Build Dynarec block bigger (continue when block overlaps, but only for blocks in elf memory)<br />
+        <b>3</b> : Build Dynarec block bigger (continue when block overlaps, for all types of memory)
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_strongmem" translatable="false"><![CDATA[
+        Simulation of Strong Memory model<br /><br />
+        <b>0</b> : Don\'t try anything special<br />
+        <b>1</b> : Enable some Memory Barrier when writing to memory (on some MOV opcode)<br />
+        <b>2</b> : All 1 plus a Memory Barrier on every write to memory using MOV<br />
+        <b>3</b> : All 2 plus Memory Barrier when reading from memory and on some SSE/SSE2 opcodes
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_weakbarrier" translatable="false"><![CDATA[
+        Tweak the memory barriers to reduce the performance impact by strongmem<br /><br />
+        <b>0</b> : Use regular safe barrier<br />
+        <b>1</b> : Use weak barriers to have more performance boost<br />
+        <b>2</b> : All in 1, plus disabled the last write barriers
+    ]]></string>
+    <string name="box64_env_var_help__dynarec_forward" translatable="false">Defines the max allowed forward value when building Block</string>
+    <string name="box64_env_var_help__dynarec_callret" translatable="false">Optimization of CALL/RET opcodes</string>
+    <string name="box64_env_var_help__dynarec_wait" translatable="false">Defines whether or not Dynarec will wait for the FillBlock to be ready</string>
+    <string name="box64_env_var_help__dynarec_nativeflags" translatable="false">The generated code will use native flags, if possible</string>
+    <string name="columns">Kolumny</string>
+    <string name="directinput_mapper_type">Typ mappera DirectInput</string>
+    <string name="desktop">Pulpit</string>
+    <string name="theme">Motyw</string>
+    <string name="background">Tło</string>
+    <string name="max_device_memory">Maksymalna pamięć urządzenia</string>
+    <string name="frame_rate">Liczba klatek na sekundę</string>
+    <string name="configuration">Konfiguracja</string>
+    <string name="browse">Przeglądaj</string>
+    <string name="magnifier">Lupa</string>
+    <string name="bring_to_front">Przesuń na wierzch</string>
+    <string name="options">Opcje</string>
+    <string name="logs">Dzienniki</string>
+    <string name="enable_wine_debug">Włącz debugowanie Wine</string>
+    <string name="box64_logs">Dzienniki Box64</string>
+    <string name="export">Eksportuj</string>
+    <string name="logs_exported_to">Dzienniki wyeksportowano do</string>
+    <string name="general">Ogólne</string>
+    <string name="startup_selection">Wybór uruchamiania</string>
+    <string name="wine_debug_channel">Kanał debugowania Wine</string>
+    <string name="save_logs_to_file">Zapisz dzienniki do pliku</string>
+    <string name="new_folder">Nowy folder</string>
+    <string name="view_style">Styl widoku</string>
+    <string name="there_already_file_with_that_name">Plik o tej nazwie już istnieje</string>
+    <string name="cut">Wytnij</string>
+    <string name="copying_files">Kopiowanie plików…</string>
+    <string name="removing_files">Usuwanie plików…</string>
+    <string name="disable_mouse_input">Wyłącz wejście myszy</string>
+    <string name="move_cursor_to_touchpoint">Przesuń kursor do punktu dotyku</string>
+    <string name="sync_every_frame">Synchronizuj każdą klatkę</string>
+    <string name="dpi_font_size">DPI (Rozmiar czcionki)</string>
+    <string name="preferred_input_api">Preferowane API wejścia</string>
+    <string name="file_manager">Menedżer plików</string>
+    <string name="documents">Dokumenty</string>
+    <string name="items">elementy</string>
+    <string name="you_cannot_paste_files_here">Nie można tu wkleić plików</string>
+    <string name="information">Informacje</string>
+    <string name="rename">Zmień nazwę</string>
+    <string name="location">Lokalizacja</string>
+    <string name="file">Plik</string>
+    <string name="folder">Folder</string>
+    <string name="size">Rozmiar</string>
+    <string name="modified">Zmodyfikowano</string>
+    <string name="contains">Zawiera</string>
+    <string name="favorites">Ulubione</string>
+    <string name="add_to_favorites">Dodaj do ulubionych</string>
+    <string name="file_added_to_favorites">Plik dodano do ulubionych</string>
+    <string name="game_controllers">Kontrolery gier</string>
+    <string name="home">Strona główna</string>
+    <string name="custom_device">Niestandardowe urządzenie</string>
+    <string name="reinstall_system_files">Zainstaluj ponownie pliki systemowe</string>
+    <string name="do_you_want_to_reinstall_system_files">Czy chcesz ponownie zainstalować pliki systemowe?</string>
+    <string name="mouse">Mysz</string>
+    <string name="cursor_size">Rozmiar kursora</string>
+    <string name="color">Kolor</string>
+    <string name="volume">Głośność</string>
+    <string name="average_latency">Średnie opóźnienie</string>
+    <string name="performance_mode">Tryb wydajności</string>
+    <string name="audio">Audio</string>
+    <string name="opengl_version">Wersja OpenGL</string>
+    <string name="disable_vertex_array_bgra">Wyłącz tablicę wierzchołków BGRA</string>
+    <string name="screen_effect">Efekt ekranu</string>
+    <string name="enable_fxaa">Włącz FXAA</string>
+    <string name="brightness">Jasność</string>
+    <string name="contrast">Kontrast</string>
+    <string name="gamma">Gamma</string>
+    <string name="color_adjustment">Korekcja kolorów</string>
+    <string name="reset">Resetuj</string>
+    <string name="enable_crt_shader">Włącz shader CRT</string>
+    <string name="open_directory">Otwórz katalog</string>
+    <string name="locations">Lokalizacje</string>
+    <string name="downloads">Pobrane</string>
+    <string name="internal_storage">Pamięć wewnętrzna</string>
+    <string name="windows_version">Wersja systemu Windows</string>
+    <string name="install_component">Zainstaluj komponent</string>
+    <string name="open_android_browser_from_wine">Otwórz przeglądarkę Android z poziomu Wine</string>
+    <string name="use_android_clipboard_on_Wine">Używaj schowka Android w Wine</string>
+    <string name="capture_pointer_on_external_mouse">Przechwytuj wskaźnik przy zewnętrznej myszy</string>
+    <string name="there_are_no_items_to_download">Brak elementów do pobrania</string>
+    <string name="enable_direct_rendering">Włącz bezpośrednie renderowanie</string>
+    <string name="d3d_feature_level">Poziom funkcji D3D</string>
+    <string name="system_font">Czcionka systemowa</string>
+    <string name="vulkan_version">Wersja Vulkan</string>
+    <string name="exposed_extensions">Dostępne rozszerzenia</string>
+    <string name="multiselection_combobox_display_text">%d z %d elementów</string>
+    <string name="voltage">Napięcie</string>
+    <string name="current">Natężenie prądu</string>
+    <string name="capacity">Pojemność</string>
+    <string name="sound">Dźwięk</string>
     <string name="midi_soundfont">MIDI SoundFont</string>
-    <string name="instrument">Інструмент</string>
-    <string name="channel">Канал</string>
-    <string name="note">Нота</string>
-    <string name="move_mouse_when_pressed">Переміщати мишу при натисканні</string>
-    <string name="midi_input_device">Пристрій введення MIDI</string>
-    <string name="auto">Авто</string>
-    <string name="active_windows">Активні вікна</string>
-    <string name="show_desktop">Показати робочий стіл</string>
-    <string name="language">Мова</string>
-    <string name="image_cache_size">Розмір кешу зображень</string>
-    <string name="pip_mode">Режим PiP (Картинка в картинці)</string>
-    <string name="resource_memory_type">Тип пам\'яті ресурсів</string>
-    <string name="zero_no_limit">0 (Без обмежень)</string>
-    <string name="custom">Власний</string>
-    <string name="minimal">Мінімальний</string>
-    <string name="trace">Трасування</string>
-    <string name="builtin_wine">Вбудована (Wine)</string>
-    <string name="native_windows">Власна (Windows)</string>
-    <string name="light">Світла</string>
-    <string name="dark">Темна</string>
-    <string name="image">Зображення</string>
-    <string name="solid_color">Суцільний колір</string>
-    <string name="startup_selection_normal">Нормальний (Завантажити всі служби)</string>
-    <string name="startup_selection_essential">Основний (Завантажити лише важливі служби)</string>
-    <string name="startup_selection_aggressive">Агресивний (Зупиняти служби при запуску)</string>
-    <string name="both">Обидва</string>
-    <string name="low_latency">Низька задержка</string>
-    <string name="power_saving">Енергозбереження</string>
-    <string name="player">Гравець:</string>
-    <string name="gamepad">Геймпад</string>
-    <string name="enable_vibration">Увімкнути вібрацію</string>
-    <string name="mode">Режим</string>
-    <string name="external_controller">Зовнішній контролер</string>
-    <string name="controls_profile">Профіль керування</string>
-    <string name="do_you_want_to_reset_configurations">Ви хочете скинути налаштування?</string>
-    <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Налаштування змінено. Бажаєте перезапустити додаток?</string>
-    <string name="hud_mode">Режим HUD</string>
-    <string name="simple_fps">Простий (FPS)</string>
-    <string name="full">Повний</string>
-    <string name="renderer">Рендерер</string>
+    <string name="instrument">Instrument</string>
+    <string name="channel">Kanał</string>
+    <string name="note">Notatka</string>
+    <string name="move_mouse_when_pressed">Poruszaj myszą po naciśnięciu</string>
+    <string name="midi_input_device">Urządzenie wejściowe MIDI</string>
+    <string name="auto">Automatycznie</string>
+    <string name="active_windows">Aktywne okna</string>
+    <string name="show_desktop">Pokaż pulpit</string>
+    <string name="language">Język</string>
+    <string name="image_cache_size">Rozmiar pamięci podręcznej obrazów</string>
+    <string name="pip_mode">Tryb PiP</string>
+    <string name="adrenotools_driver" translatable="false">Adrenotools Driver</string>
+    <string name="resource_memory_type">Typ pamięci zasobów</string>
+    <string name="zero_no_limit">0 (Brak limitu)</string>
+    <string name="custom">Niestandardowy</string>
+    <string name="minimal">Minimalny</string>
+    <string name="trace">Ślad</string>
+    <string name="builtin_wine">Wbudowany (Wine)</string>
+    <string name="native_windows">Natywny (Windows)</string>
+    <string name="light">Jasny</string>
+    <string name="dark">Ciemny</string>
+    <string name="image">Obraz</string>
+    <string name="solid_color">Jednolity kolor</string>
+    <string name="startup_selection_normal">Normalny (Załaduj wszystkie usługi)</string>
+    <string name="startup_selection_essential">Podstawowy (Załaduj tylko niezbędne usługi)</string>
+    <string name="startup_selection_aggressive">Agresywny (Zatrzymaj usługi przy starcie)</string>
+    <string name="both">Oba</string>
+    <string name="low_latency">Niskie opóźnienie</string>
+    <string name="power_saving">Oszczędzanie energii</string>
+    <string name="player">Gracz</string>
+    <string name="gamepad">Gamepad</string>
+    <string name="enable_vibration">Włącz wibracje</string>
+    <string name="mode">Tryb</string>
+    <string name="external_controller">Zewnętrzny kontroler</string>
+    <string name="controls_profile">Profil sterowania</string>
+    <string name="do_you_want_to_reset_configurations">Czy chcesz zresetować konfiguracje?</string>
+    <string name="the_settings_have_been_changed_do_you_want_to_restart_the_app">Ustawienia zostały zmienione. Czy chcesz ponownie uruchomić aplikację?</string>
+    <string name="hud_mode">Tryb HUD</string>
+    <string name="simple_fps">Prosty (FPS)</string>
+    <string name="full">Pełny</string>
+    <string name="ddraw_wrapper" translatable="false">DDraw Wrapper</string>
+    <string name="renderer">Renderer</string>
 </resources>

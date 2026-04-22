@@ -69,6 +69,13 @@ public class SettingsFragment extends Fragment {
     public static final byte APP_THEME_LIGHT = 0;
     public static final byte APP_THEME_DARK = 1;
     public static final byte APP_THEME_DARK1 = 2;
+    public static final byte APP_THEME_DARK2 = 3;
+    public static final byte APP_THEME_DARK3 = 4;
+    public static final byte APP_THEME_DARK4 = 5;
+    public static final byte APP_THEME_DARK5 = 6;
+    public static final byte APP_THEME_DARK6 = 7;
+    public static final byte APP_THEME_DARK7 = 8;
+    public static final byte APP_THEME_DARK8 = 9;
     private Callback<Uri> selectWineFileCallback;
     private PreloaderDialog preloaderDialog;
     private SharedPreferences preferences;
@@ -136,12 +143,34 @@ if (currentTheme == APP_THEME_LIGHT) {
     oldAppThemeId = R.id.RBDark;
 } else if (currentTheme == APP_THEME_DARK1) {
     oldAppThemeId = R.id.RBDark1;
-} else {
+} 
+  else if (currentTheme == APP_THEME_DARK2) {
+    oldAppThemeId = R.id.RBDark2;
+}
+  else if (currentTheme == APP_THEME_DARK3) {
+    oldAppThemeId = R.id.RBDark3;
+}
+  else if (currentTheme == APP_THEME_DARK4) {
+    oldAppThemeId = R.id.RBDark4;
+}
+  else if (currentTheme == APP_THEME_DARK5) {
+    oldAppThemeId = R.id.RBDark5;
+}
+  else if (currentTheme == APP_THEME_DARK6) {
+    oldAppThemeId = R.id.RBDark6;
+}
+  else if (currentTheme == APP_THEME_DARK7) {
+    oldAppThemeId = R.id.RBDark7;
+} 
+  else if (currentTheme == APP_THEME_DARK8) {
+    oldAppThemeId = R.id.RBDark8;
+} 
+  else {
     oldAppThemeId = R.id.RBDark;
 }
 
 rgAppTheme.check(oldAppThemeId);
-
+ 
 
         final CheckBox cbMoveCursorToTouchpoint = view.findViewById(R.id.CBMoveCursorToTouchpoint);
         cbMoveCursorToTouchpoint.setChecked(preferences.getBoolean("move_cursor_to_touchpoint", false));
@@ -230,6 +259,20 @@ if (checkedId == R.id.RBLight) {
     newTheme = APP_THEME_DARK;
 } else if (checkedId == R.id.RBDark1) {
     newTheme = APP_THEME_DARK1;
+} else if (checkedId == R.id.RBDark2) {
+    newTheme = APP_THEME_DARK2;
+} else if (checkedId == R.id.RBDark3) {
+    newTheme = APP_THEME_DARK3;
+} else if (checkedId == R.id.RBDark4) {
+    newTheme = APP_THEME_DARK4;
+} else if (checkedId == R.id.RBDark5) {
+    newTheme = APP_THEME_DARK5;
+} else if (checkedId == R.id.RBDark6) {
+    newTheme = APP_THEME_DARK6;
+} else if (checkedId == R.id.RBDark7) {
+    newTheme = APP_THEME_DARK7;
+} else if (checkedId == R.id.RBDark8) {
+    newTheme = APP_THEME_DARK8;
 } else {
     newTheme = APP_THEME_DARK;
 }

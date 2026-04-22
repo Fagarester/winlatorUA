@@ -13,7 +13,7 @@ public class LocaleHelper {
     private static final String[] supportedLocales = {
         "en_US", "zh_CN", "es_ES", "hi_IN", "ar_SA", 
         "fr_FR", "bn_BD", "pt_BR", "ru_RU", "ja_JP", 
-        "pa_IN", "de_DE", "jv_ID", "ko_KR", "te_IN", 
+        "be_BY", "de_DE", "jv_ID", "ko_KR", "kk_KZ", 
         "vi_VN", "mr_IN", "ta_IN", "tr_TR", "ur_PK", 
         "it_IT", "th_TH", "gu_IN", "kn_IN", "ml_IN", 
         "uk_UA", "pl_PL", "ro_RO", "nl_NL", "hu_HU"
