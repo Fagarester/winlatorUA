@@ -122,7 +122,9 @@ public class SettingsFragment extends Fragment {
 
         final Spinner sBox64Preset = view.findViewById(R.id.SBox64Preset);
         loadBox64PresetSpinner(view, sBox64Preset);
-
+        
+        final RadioGroup rgAppTheme = view.findViewById(R.id.RGAppTheme);
+        
 int currentTheme = preferences.getInt("app_theme", APP_THEME_DARK);
 int oldAppThemeId;
 
