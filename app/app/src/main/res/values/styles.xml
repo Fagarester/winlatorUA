@@ -182,7 +182,7 @@
         <item name="preloaderBackground">@drawable/preloader_background_dark</item>
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
-    <style name="AppThemeLight" parent="@style/AppThemeBase">
+    <style name="AppThemedark8" parent="@style/AppThemeBase">
         <item name="colorAccent">#0288d1</item>
         <item name="colorPrimary">#F5F5F5</item>
         <item name="colorPrimaryDark">#E0E0E0</item>
