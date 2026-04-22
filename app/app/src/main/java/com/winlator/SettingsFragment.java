@@ -127,16 +127,17 @@ public class SettingsFragment extends Fragment {
         
 int currentTheme = preferences.getInt("app_theme", APP_THEME_DARK);
 int oldAppThemeId;
-int newAppThemeId;
+int newAppThemeId = APP_THEME_DARK;
+
 
 if (currentTheme == APP_THEME_LIGHT) {
     oldAppThemeId = R.id.RBLight;
 } else if (currentTheme == APP_THEME_DARK) {
     oldAppThemeId = R.id.RBDark;
-} else if (currentTheme == APP_THEME_DARK1) { // Проверяем твою тему
+} else if (currentTheme == APP_THEME_DARK1) {
     oldAppThemeId = R.id.RBDark1;
 } else {
-    oldAppThemeId = R.id.RBDark; // Дефолт
+    oldAppThemeId = R.id.RBDark;
 }
 
 rgAppTheme.check(oldAppThemeId);
