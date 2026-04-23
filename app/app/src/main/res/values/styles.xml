@@ -62,15 +62,15 @@
     
     <style name="AppThemeDark1" parent="@style/AppThemeBase">
         <item name="colorAccent">#ffff0000</item>
-        <item name="colorPrimary">#121414</item>
-        <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#ff8e0000</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorControlNormal">#ff2d0000</item>
         <item name="colorPrimaryText">#ffc40000</item>
-        <item name="colorSecondaryText">#ffe40000</item>
-        <item name="colorPrimarySurface">#121414</item>
-        <item name="colorSecondarySurface">#121414</item>
+        <item name="colorSecondaryText">#ff790000</item>
+        <item name="colorPrimarySurface">#000000</item>
+        <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#D32F2F</item>
-        <item name="colorSecondaryVariant">#2C2C2C</item>
+        <item name="colorSecondaryVariant">#000000</item>
         <item name="colorError">#FF5252</item>
         <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
         <item name="toolboxBackground">@drawable/toolbox_dark</item>
@@ -80,15 +80,15 @@
     </style>
     <style name="AppThemeDark2" parent="@style/AppThemeBase">
         <item name="colorAccent">#ff0cff00</item>
-        <item name="colorPrimary">#121414</item>
-        <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#ff009811</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorControlNormal">#ff002704</item>
         <item name="colorPrimaryText">#ff10c400</item>
-        <item name="colorSecondaryText">#9E9E9E</item>
-        <item name="colorPrimarySurface">#121412</item>
-        <item name="colorSecondarySurface">#121414</item>
+        <item name="colorSecondaryText">#ff007b00</item>
+        <item name="colorPrimarySurface">#000000</item>
+        <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#ff13e700</item>
-        <item name="colorSecondaryVariant">#242B24</item>
+        <item name="colorSecondaryVariant">#000000</item>
         <item name="colorError">#FF3D00</item>
         <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
         <item name="toolboxBackground">@drawable/toolbox_dark</item>
@@ -98,15 +98,15 @@
     </style>
     <style name="AppThemeDark3" parent="@style/AppThemeBase">
         <item name="colorAccent">#ff0003ff</item>
-        <item name="colorPrimary">#121414</item>
-        <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#ff001a99</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorControlNormal">#ff00072a</item>
         <item name="colorPrimaryText">#ff000aac</item>
-        <item name="colorSecondaryText">#9E9E9E</item>
-        <item name="colorPrimarySurface">#121414</item>
-        <item name="colorSecondarySurface">#121414</item>
+        <item name="colorSecondaryText">#ff050079</item>
+        <item name="colorPrimarySurface">#000000</item>
+        <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#ff0200e1</item>
-        <item name="colorSecondaryVariant">#1C2128</item>
+        <item name="colorSecondaryVariant">#000000</item>
         <item name="colorError">#CF6679</item>
         <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
         <item name="toolboxBackground">@drawable/toolbox_dark</item>
@@ -116,15 +116,15 @@
     </style>
     <style name="AppThemeDark4" parent="@style/AppThemeBase">
         <item name="colorAccent">#FF00FF</item>
-        <item name="colorPrimary">#121414</item>
-        <item name="colorPrimaryDark">#121214</item>
-        <item name="colorControlNormal">#ff890091</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorControlNormal">#ff28002a</item>
         <item name="colorPrimaryText">#ffbe00ae</item>
-        <item name="colorSecondaryText">#9E9E9E</item>
-        <item name="colorPrimarySurface">#121414</item>
-        <item name="colorSecondarySurface">#121414</item>
+        <item name="colorSecondaryText">#ff7d0081</item>
+        <item name="colorPrimarySurface">#000000</item>
+        <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#ffe900eb</item>
-        <item name="colorSecondaryVariant">#25252B</item>
+        <item name="colorSecondaryVariant">#000000</item>
         <item name="colorError">#FF5252</item>
         <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
         <item name="toolboxBackground">@drawable/toolbox_dark</item>
@@ -134,15 +134,15 @@
     </style>
     <style name="AppThemeDark5" parent="@style/AppThemeBase">
         <item name="colorAccent">#FFEB00</item>
-        <item name="colorPrimary">#121414</item>
-        <item name="colorPrimaryDark">#121212</item>
-        <item name="colorControlNormal">#ff969a00</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorControlNormal">#ff2a2b00</item>
         <item name="colorPrimaryText">#ffc2b300</item>
-        <item name="colorSecondaryText">#9E9E9E</item>
-        <item name="colorPrimarySurface">#121414</item>
-        <item name="colorSecondarySurface">#121414</item>
+        <item name="colorSecondaryText">#9E9E9E#ff807400</item>
+        <item name="colorPrimarySurface">#000000</item>
+        <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#ffd7c600</item>
-        <item name="colorSecondaryVariant">#2B2B24</item>
+        <item name="colorSecondaryVariant">#000000</item>
         <item name="colorError">#FF5252</item>
         <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
         <item name="toolboxBackground">@drawable/toolbox_dark</item>
@@ -152,15 +152,15 @@
     </style>
     <style name="AppThemeDark6" parent="@style/AppThemeBase">
         <item name="colorAccent">#ffff6f00</item>
-        <item name="colorPrimary">#121414</item>
-        <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#ff914400</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorControlNormal">#ff291300</item>
         <item name="colorPrimaryText">#ffc66c00</item>
-        <item name="colorSecondaryText">#9E9E9E</item>
-        <item name="colorPrimarySurface">#121414</item>
-        <item name="colorSecondarySurface">#121414</item>
+        <item name="colorSecondaryText">#ff824700</item>
+        <item name="colorPrimarySurface">#000000</item>
+        <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#ffce5c03</item>
-        <item name="colorSecondaryVariant">#242B2B</item>
+        <item name="colorSecondaryVariant">#000000</item>
         <item name="colorError">#FF5252</item>
         <item name="popupMenuBackground">@drawable/content_dialog_background_dark</item>
         <item name="toolboxBackground">@drawable/toolbox_dark</item>
