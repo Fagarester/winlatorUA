@@ -138,7 +138,7 @@
         <item name="colorPrimaryDark">#000000</item>
         <item name="colorControlNormal">#ff2a2b00</item>
         <item name="colorPrimaryText">#ffc2b300</item>
-        <item name="colorSecondaryText">#9E9E9E#ff807400</item>
+        <item name="colorSecondaryText">#ff807400</item>
         <item name="colorPrimarySurface">#000000</item>
         <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#ffd7c600</item>
