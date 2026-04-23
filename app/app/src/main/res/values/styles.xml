@@ -64,7 +64,7 @@
         <item name="colorAccent">#ffff0000</item>
         <item name="colorPrimary">#121414</item>
         <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#8E8E8E</item>
+        <item name="colorControlNormal">#ff8e0000</item>
         <item name="colorPrimaryText">#ffc40000</item>
         <item name="colorSecondaryText">#ffe40000</item>
         <item name="colorPrimarySurface">#121414</item>
@@ -82,7 +82,7 @@
         <item name="colorAccent">#ff0cff00</item>
         <item name="colorPrimary">#121414</item>
         <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#757575</item>
+        <item name="colorControlNormal">#ff009811</item>
         <item name="colorPrimaryText">#ff10c400</item>
         <item name="colorSecondaryText">#9E9E9E</item>
         <item name="colorPrimarySurface">#121412</item>
@@ -100,7 +100,7 @@
         <item name="colorAccent">#ff0003ff</item>
         <item name="colorPrimary">#121414</item>
         <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#616161</item>
+        <item name="colorControlNormal">#ff001a99</item>
         <item name="colorPrimaryText">#ff000aac</item>
         <item name="colorSecondaryText">#9E9E9E</item>
         <item name="colorPrimarySurface">#121414</item>
@@ -118,7 +118,7 @@
         <item name="colorAccent">#FF00FF</item>
         <item name="colorPrimary">#121414</item>
         <item name="colorPrimaryDark">#121214</item>
-        <item name="colorControlNormal">#757575</item>
+        <item name="colorControlNormal">#ff890091</item>
         <item name="colorPrimaryText">#ffbe00ae</item>
         <item name="colorSecondaryText">#9E9E9E</item>
         <item name="colorPrimarySurface">#121414</item>
@@ -136,7 +136,7 @@
         <item name="colorAccent">#FFEB00</item>
         <item name="colorPrimary">#121414</item>
         <item name="colorPrimaryDark">#121212</item>
-        <item name="colorControlNormal">#757575</item>
+        <item name="colorControlNormal">#ff969a00</item>
         <item name="colorPrimaryText">#ffc2b300</item>
         <item name="colorSecondaryText">#9E9E9E</item>
         <item name="colorPrimarySurface">#121414</item>
@@ -154,7 +154,7 @@
         <item name="colorAccent">#ffff6f00</item>
         <item name="colorPrimary">#121414</item>
         <item name="colorPrimaryDark">#121414</item>
-        <item name="colorControlNormal">#757575</item>
+        <item name="colorControlNormal">#ff914400</item>
         <item name="colorPrimaryText">#ffc66c00</item>
         <item name="colorSecondaryText">#9E9E9E</item>
         <item name="colorPrimarySurface">#121414</item>
@@ -187,16 +187,16 @@
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
     <style name="AppThemeDark8" parent="@style/AppThemeBase">
-        <item name="colorAccent">#0288d1</item>
-        <item name="colorPrimary">#F5F5F5</item>
-        <item name="colorPrimaryDark">#E0E0E0</item>
-        <item name="colorControlNormal">#757575</item>
-        <item name="colorPrimaryText">#212121</item>
-        <item name="colorSecondaryText">#757575</item>
-        <item name="colorPrimarySurface">#FFFFFF</item>
-        <item name="colorSecondarySurface">#F0F0F0</item>
-        <item name="colorPrimaryVariant">#FFFFFF</item>
-        <item name="colorSecondaryVariant">#E0E0E0</item>
+        <item name="colorAccent">#ffff0700</item>
+        <item name="colorPrimary">#000000</item>
+        <item name="colorPrimaryDark">#000000</item>
+        <item name="colorControlNormal">#ffb300ff</item>
+        <item name="colorPrimaryText">#ff00ff12</item>
+        <item name="colorSecondaryText">#000000</item>
+        <item name="colorPrimarySurface">#000000</item>
+        <item name="colorSecondarySurface">#000000</item>
+        <item name="colorPrimaryVariant">#ffff00e8</item>
+        <item name="colorSecondaryVariant">#000000</item>
         <item name="colorError">#D32F2F</item>
         <item name="popupMenuBackground">@drawable/content_dialog_background_light</item>
         <item name="toolboxBackground">@drawable/toolbox_light</item>

@@ -70,14 +70,14 @@
     <string-array name="desktop_theme_entries">
         <item>Light</item>
         <item>Dark</item>
-        <item>Dark1</item>
-        <item>Dark2</item>
-        <item>Dark3</item>
-        <item>Dark4</item>
-        <item>Dark5</item>
-        <item>Dark6</item>
-        <item>Dark7</item>
-        <item>Dark8</item>
+        <item>red</item>
+        <item>green</item>
+        <item>blue</item>
+        <item>purple</item>
+        <item>yellow</item>
+        <item>Orange</item>
+        <item>dark</item>
+        <item>colors</item>
     </string-array>
     <string-array name="desktop_background_type_entries">
         <item>Image</item>
