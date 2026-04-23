@@ -165,12 +165,12 @@
         <item name="progressBarIndeterminateImage">@drawable/progress_bar_indeterminate_dark</item>
     </style>
     <style name="AppThemeDark7" parent="@style/AppThemeBase">
-        <item name="colorAccent">#FFFFFF</item>
+        <item name="colorAccent">#ff181818</item>
         <item name="colorPrimary">#000000</item>
         <item name="colorPrimaryDark">#000000</item>
-        <item name="colorControlNormal">#757575</item>
+        <item name="colorControlNormal">#ff181818</item>
         <item name="colorPrimaryText">#FFFFFF</item>
-        <item name="colorSecondaryText">#808080</item>
+        <item name="colorSecondaryText">#ff181818</item>
         <item name="colorPrimarySurface">#000000</item>
         <item name="colorSecondarySurface">#000000</item>
         <item name="colorPrimaryVariant">#ff181818</item>
