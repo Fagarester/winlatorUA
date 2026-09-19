@@ -107,6 +107,31 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
 
         String command = rootDir+"/usr/local/bin/box64 "+guestExecutable;
 
+        // NATIVE_EXEC: run a native ARM64 glibc binary directly (no Wine, no Box64).
+        // Container Settings -> Environment Variables:
+        //   NATIVE_SRC  = /storage/emulated/0/Download/factorio   (game folder on phone storage, optional)
+        //   NATIVE_EXEC = /home/xuser/factorio/bin/arm64/factorio (path inside rootfs)
+        // NATIVE_SRC is copied once into rootfs/home/xuser/ because binaries cannot
+        // be executed from shared storage. The binary is started through the rootfs
+        // glibc loader because Android has no /lib/ld-linux-aarch64.so.1.
+        String nativeExec = envVars.get("NATIVE_EXEC");
+        if (nativeExec != null && !nativeExec.isEmpty()) {
+            String nativeSrc = envVars.get("NATIVE_SRC");
+            if (nativeSrc != null && !nativeSrc.isEmpty()) {
+                File srcDir = new File(nativeSrc);
+                File dstDir = new File(rootDir, RootFS.HOME_PATH+"/"+srcDir.getName());
+                if (srcDir.isDirectory() && !dstDir.exists()) FileUtils.copy(srcDir, dstDir);
+            }
+
+            File nativeFile = new File(nativeExec.startsWith("/") && !nativeExec.startsWith("/storage") ? rootDir+nativeExec : nativeExec);
+            nativeFile.setExecutable(true);
+            String loader = rootFS.getLibDir()+"/ld-linux-aarch64.so.1";
+            command = loader+" --library-path "+rootFS.getLibDir()+" "+nativeFile.getPath();
+            File workDir = nativeFile.getParentFile();
+            if (workDir != null && workDir.isDirectory()) rootDir = workDir;
+            envVars.remove("LD_PRELOAD");
+        }
+
         return ProcessHelper.exec(command, envVars, rootDir, (status) -> {
             synchronized (lock) {
                 pid = -1;
