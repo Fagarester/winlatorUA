@@ -1,9 +1,12 @@
 package com.winlator.xserver.extensions;
 
+import static com.winlator.xserver.XClientRequestHandler.RESPONSE_CODE_SUCCESS;
+
 import android.util.SparseBooleanArray;
 
 import com.winlator.xconnector.XInputStream;
 import com.winlator.xconnector.XOutputStream;
+import com.winlator.xconnector.XStreamLock;
 import com.winlator.xserver.XClient;
 import com.winlator.xserver.XServer;
 import com.winlator.xserver.errors.BadFence;
@@ -18,6 +21,19 @@ public class SyncExtension extends Extension {
     private final SparseBooleanArray fences = new SparseBooleanArray();
 
     private static abstract class ClientOpcodes {
+        private static final byte INITIALIZE = 0;
+        private static final byte LIST_SYSTEM_COUNTERS = 1;
+        private static final byte CREATE_COUNTER = 2;
+        private static final byte SET_COUNTER = 3;
+        private static final byte CHANGE_COUNTER = 4;
+        private static final byte QUERY_COUNTER = 5;
+        private static final byte DESTROY_COUNTER = 6;
+        private static final byte AWAIT = 7;
+        private static final byte CREATE_ALARM = 8;
+        private static final byte CHANGE_ALARM = 9;
+        private static final byte DESTROY_ALARM = 11;
+        private static final byte SET_PRIORITY = 12;
+        private static final byte GET_PRIORITY = 13;
         private static final byte CREATE_FENCE = 14;
         private static final byte TRIGGER_FENCE = 15;
         private static final byte RESET_FENCE = 16;
@@ -107,6 +123,58 @@ public class SyncExtension extends Extension {
         }
     }
 
+    private void initialize(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4);
+
+        try (XStreamLock lock = outputStream.lock()) {
+            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            outputStream.writeByte((byte)0);
+            outputStream.writeShort(client.getSequenceNumber());
+            outputStream.writeInt(0);
+            outputStream.writeByte((byte)3);
+            outputStream.writeByte((byte)1);
+            outputStream.writePad(22);
+        }
+    }
+
+    private void listSystemCounters(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        try (XStreamLock lock = outputStream.lock()) {
+            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            outputStream.writeByte((byte)0);
+            outputStream.writeShort(client.getSequenceNumber());
+            outputStream.writeInt(0);
+            outputStream.writeInt(0);
+            outputStream.writePad(20);
+        }
+    }
+
+    private void queryCounter(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        client.skipRequest();
+
+        try (XStreamLock lock = outputStream.lock()) {
+            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            outputStream.writeByte((byte)0);
+            outputStream.writeShort(client.getSequenceNumber());
+            outputStream.writeInt(0);
+            outputStream.writeInt(0);
+            outputStream.writeInt(0);
+            outputStream.writePad(16);
+        }
+    }
+
+    private void getPriority(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        client.skipRequest();
+
+        try (XStreamLock lock = outputStream.lock()) {
+            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            outputStream.writeByte((byte)0);
+            outputStream.writeShort(client.getSequenceNumber());
+            outputStream.writeInt(0);
+            outputStream.writeInt(0);
+            outputStream.writePad(20);
+        }
+    }
+
     @Override
     public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int opcode = client.getRequestData();
@@ -125,6 +193,30 @@ public class SyncExtension extends Extension {
                 break;
             case ClientOpcodes.AWAIT_FENCE:
                 awaitFence(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.INITIALIZE:
+                initialize(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.LIST_SYSTEM_COUNTERS:
+                listSystemCounters(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.QUERY_COUNTER:
+                queryCounter(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.GET_PRIORITY:
+                getPriority(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.CREATE_COUNTER:
+            case ClientOpcodes.SET_COUNTER:
+            case ClientOpcodes.CHANGE_COUNTER:
+            case ClientOpcodes.DESTROY_COUNTER:
+            case ClientOpcodes.AWAIT:
+            case ClientOpcodes.CREATE_ALARM:
+            case ClientOpcodes.CHANGE_ALARM:
+            case ClientOpcodes.DESTROY_ALARM:
+            case ClientOpcodes.SET_PRIORITY:
+                // Counters and alarms are not implemented: accept the request and ignore it.
+                client.skipRequest();
                 break;
             default:
                 throw new BadImplementation();
