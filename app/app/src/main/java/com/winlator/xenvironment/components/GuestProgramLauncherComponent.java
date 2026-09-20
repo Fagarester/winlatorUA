@@ -143,7 +143,7 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 File configFile = new File(gameRoot, "config-native.ini");
                 // [graphics]: fewer parallel sprite loaders and smaller atlases to keep RAM usage low on a phone
                 FileUtils.writeString(configFile, "[path]\nread-data="+gameRoot+"/data\nwrite-data="+gameRoot+"\n"+
-                    "[graphics]\nmax-sprite-loading-threads=2\ntexture-compression-level=low-quality\n");
+                    "[graphics]\nmax-sprite-loading-threads=2\ntexture-compression-level=low-quality\ngpu-accelerated-compression=false\n");
                 extraArgs = " --config "+configFile.getPath();
             }
             command = loader+" --library-path "+rootFS.getLibDir()+" "+nativeFile.getPath()+extraArgs;
