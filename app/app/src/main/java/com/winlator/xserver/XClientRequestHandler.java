@@ -158,6 +158,13 @@ public class XClientRequestHandler implements RequestHandler {
         client.setRequestData(requestData);
         client.setRequestLength(requestLength);
 
+        // Debug tracing (visible only when the debug log is enabled)
+        if (opcode < 0) {
+            Extension traced = client.xServer.getExtension(opcode);
+            client.xServer.debugPrint("ext "+(traced != null ? traced.getName() : "?")+" minor="+(requestData & 0xff));
+        }
+        else client.xServer.debugPrint("core opcode="+opcode);
+
         try {
             if (opcode < 0) {
                 Extension extension = client.xServer.getExtension(opcode);
@@ -350,83 +357,4 @@ public class XClientRequestHandler implements RequestHandler {
                         break;
                     case ClientOpcodes.POLY_SEGMENT:
                         client.skipRequest();
-                        break;
-                    case ClientOpcodes.POLY_RECTANGLE:
-                        client.skipRequest();
-                        break;
-                    case ClientOpcodes.POLY_FILL_RECTANGLE:
-                        try (XLock lock = client.xServer.lock(XServer.Lockable.DRAWABLE_MANAGER, XServer.Lockable.GRAPHIC_CONTEXT_MANAGER)) {
-                            DrawRequests.polyFillRectangle(client, inputStream, outputStream);
-                        }
-                        break;
-                    case ClientOpcodes.PUT_IMAGE:
-                        try (XLock lock = client.xServer.lock(XServer.Lockable.DRAWABLE_MANAGER, XServer.Lockable.GRAPHIC_CONTEXT_MANAGER)) {
-                            DrawRequests.putImage(client, inputStream, outputStream);
-                        }
-                        break;
-                    case ClientOpcodes.GET_IMAGE:
-                        try (XLock lock = client.xServer.lock(XServer.Lockable.PIXMAP_MANAGER, XServer.Lockable.DRAWABLE_MANAGER)) {
-                            DrawRequests.getImage(client, inputStream, outputStream);
-                        }
-                        break;
-                    case ClientOpcodes.CREATE_COLORMAP:
-                        client.skipRequest();
-                        break;
-                    case ClientOpcodes.FREE_COLORMAP:
-                        client.skipRequest();
-                        break;
-                    case ClientOpcodes.CREATE_CURSOR:
-                        try (XLock lock = client.xServer.lock(XServer.Lockable.PIXMAP_MANAGER, XServer.Lockable.DRAWABLE_MANAGER, XServer.Lockable.CURSOR_MANAGER)) {
-                            CursorRequests.createCursor(client, inputStream, outputStream);
-                        }
-                        break;
-                    case ClientOpcodes.CREATE_GLYPH_CURSOR:
-                        client.skipRequest();
-                        break;
-                    case ClientOpcodes.FREE_CURSOR:
-                        try (XLock lock = client.xServer.lock(XServer.Lockable.PIXMAP_MANAGER, XServer.Lockable.DRAWABLE_MANAGER, XServer.Lockable.CURSOR_MANAGER)) {
-                            CursorRequests.freeCursor(client, inputStream, outputStream);
-                        }
-                        break;
-                    case ClientOpcodes.QUERY_EXTENSION:
-                        ExtensionRequests.queryExtension(client, inputStream, outputStream);
-                        break;
-                    case ClientOpcodes.GET_KEYBOARD_MAPPING:
-                        try (XLock lock = client.xServer.lock(XServer.Lockable.INPUT_DEVICE)) {
-                            KeyboardRequests.getKeyboardMapping(client, inputStream, outputStream);
-                        }
-                        break;
-                    case ClientOpcodes.BELL:
-                        client.skipRequest();
-                        break;
-                    case ClientOpcodes.SET_SCREEN_SAVER:
-                        client.skipRequest();
-                        break;
-                    case ClientOpcodes.GET_SCREEN_SAVER:
-                        WindowRequests.getScreenSaver(client, inputStream, outputStream);
-                        break;
-                    case ClientOpcodes.FORCE_SCREEN_SAVER:
-                        client.skipRequest();
-                        break;
-                    case ClientOpcodes.GET_POINTER_MAPPING:
-                        CursorRequests.getPointerMapping(client, inputStream, outputStream);
-                        break;
-                    case ClientOpcodes.GET_MODIFIER_MAPPING:
-                        KeyboardRequests.getModifierMapping(client, inputStream, outputStream);
-                        break;
-                    case ClientOpcodes.NO_OPERATION:
-                        client.skipRequest();
-                        break;
-                    default:
-                        throw new UnsupportedOperationException("Unsupported opcode "+opcode+".");
-                }
-            }
-        }
-        catch (XRequestError e) {
-            client.skipRequest();
-            e.sendError(client, opcode);
-        }
-
-        return true;
-    }
-}
+                    
