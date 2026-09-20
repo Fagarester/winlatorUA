@@ -141,13 +141,23 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             File gameRoot = (binDir != null && binDir.getParentFile() != null) ? binDir.getParentFile().getParentFile() : null;
             if (gameRoot != null && (new File(gameRoot, "data")).isDirectory()) {
                 File configFile = new File(gameRoot, "config-native.ini");
-                FileUtils.writeString(configFile, "[path]\nread-data="+gameRoot+"/data\nwrite-data="+gameRoot+"\n");
+                // [graphics]: fewer parallel sprite loaders and smaller atlases to keep RAM usage low on a phone
+                FileUtils.writeString(configFile, "[path]\nread-data="+gameRoot+"/data\nwrite-data="+gameRoot+"\n"+
+                    "[graphics]\nmax-sprite-loading-threads=2\ntexture-compression-level=low-quality\n");
                 extraArgs = " --config "+configFile.getPath();
             }
             command = loader+" --library-path "+rootFS.getLibDir()+" "+nativeFile.getPath()+extraArgs;
             File workDir = nativeFile.getParentFile();
             if (workDir != null && workDir.isDirectory()) rootDir = workDir;
             envVars.remove("LD_PRELOAD");
+
+            // Log the game output to Documents/Winlator/factorio-native.log (cheap, works without the debug window)
+            File logDir = LogView.getLogFile().getParentFile();
+            if (logDir != null && logDir.isDirectory() && logDir.canWrite()) {
+                File nativeLogFile = new File(logDir, "factorio-native.log");
+                FileUtils.delete(nativeLogFile);
+                envVars.put("NATIVE_LOG_FILE", nativeLogFile.getPath());
+            }
         }
 
         return ProcessHelper.exec(command, envVars, rootDir, (status) -> {
@@ -244,4 +254,4 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             }
         }
     }
-                     }
+}
