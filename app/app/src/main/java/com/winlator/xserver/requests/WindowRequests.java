@@ -23,6 +23,8 @@ import com.winlator.xserver.errors.BadWindow;
 import com.winlator.xserver.errors.XRequestError;
 import com.winlator.xserver.events.CreateNotify;
 import com.winlator.xserver.events.Event;
+import com.winlator.xserver.events.FocusIn;
+import com.winlator.xserver.events.FocusOut;
 import com.winlator.xserver.events.RawEvent;
 
 import java.io.IOException;
@@ -350,18 +352,33 @@ public abstract class WindowRequests {
         int windowId = inputStream.readInt();
         inputStream.skip(4);
 
-        switch (focusRevertTo) {
-            case NONE:
-                client.xServer.windowManager.setFocus(null, focusRevertTo);
-                break;
-            case POINTER_ROOT:
-                client.xServer.windowManager.setFocus(client.xServer.windowManager.rootWindow, focusRevertTo);
-                break;
-            case PARENT:
-                Window window = client.xServer.windowManager.getWindow(windowId);
-                if (window == null) throw new BadWindow(windowId);
-                client.xServer.windowManager.setFocus(window, focusRevertTo);
-                break;
+        WindowManager windowManager = client.xServer.windowManager;
+        Window oldFocus = windowManager.getFocusedWindow();
+        Window newFocus;
+
+        // X protocol: the window argument is the focus target (None = 0, PointerRoot = 1),
+        // revert-to only describes what happens when that window disappears.
+        // Native programs (SDL without a window manager) call XSetInputFocus(win, RevertToNone).
+        if (windowId == 0) {
+            newFocus = focusRevertTo == WindowManager.FocusRevertTo.POINTER_ROOT ? windowManager.rootWindow : null;
+        }
+        else if (windowId == 1) {
+            newFocus = windowManager.rootWindow;
+        }
+        else {
+            newFocus = windowManager.getWindow(windowId);
+            if (newFocus == null) throw new BadWindow(windowId);
+        }
+
+        windowManager.setFocus(newFocus, focusRevertTo);
+
+        if (oldFocus != newFocus) {
+            if (oldFocus != null && oldFocus != windowManager.rootWindow) {
+                oldFocus.sendEvent(Event.FOCUS_CHANGE, new FocusOut(oldFocus, FocusIn.DETAIL_NONLINEAR));
+            }
+            if (newFocus != null && newFocus != windowManager.rootWindow) {
+                newFocus.sendEvent(Event.FOCUS_CHANGE, new FocusIn(newFocus, FocusIn.DETAIL_NONLINEAR));
+            }
         }
     }
 
