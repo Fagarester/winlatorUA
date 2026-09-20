@@ -141,11 +141,32 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             File gameRoot = (binDir != null && binDir.getParentFile() != null) ? binDir.getParentFile().getParentFile() : null;
             if (gameRoot != null && (new File(gameRoot, "data")).isDirectory()) {
                 File configFile = new File(gameRoot, "config-native.ini");
-                // [graphics]: fewer parallel sprite loaders and smaller atlases to keep RAM usage low on a phone
-                FileUtils.writeString(configFile, "[path]\nread-data="+gameRoot+"/data\nwrite-data="+gameRoot+"\n"+
-                    "[graphics]\nmax-sprite-loading-threads=2\ntexture-compression-level=low-quality\ngpu-accelerated-compression=false\nvideo-memory-usage=medium\ngraphics-quality=medium\n");
+                // [graphics] defaults (keep memory low on a phone). Container variable NATIVE_GFX can override them,
+                // e.g. NATIVE_GFX=video-memory-usage=high;graphics-quality=medium
+                java.util.LinkedHashMap<String, String> gfx = new java.util.LinkedHashMap<>();
+                gfx.put("max-sprite-loading-threads", "2");
+                gfx.put("texture-compression-level", "low-quality");
+                gfx.put("gpu-accelerated-compression", "false");
+                gfx.put("video-memory-usage", "medium");
+                gfx.put("graphics-quality", "medium");
+
+                String gfxExtra = envVars.get("NATIVE_GFX");
+                if (gfxExtra != null) {
+                    for (String item : gfxExtra.split(";")) {
+                        int eq = item.indexOf('=');
+                        if (eq > 0) gfx.put(item.substring(0, eq).trim(), item.substring(eq + 1).trim());
+                    }
+                }
+
+                StringBuilder config = new StringBuilder("[path]\nread-data="+gameRoot+"/data\nwrite-data="+gameRoot+"\n[graphics]\n");
+                for (java.util.Map.Entry<String, String> entry : gfx.entrySet()) {
+                    config.append(entry.getKey()).append('=').append(entry.getValue()).append('\n');
+                }
+                FileUtils.writeString(configFile, config.toString());
                 extraArgs = " --config "+configFile.getPath();
             }
+            String nativeArgs = envVars.get("NATIVE_ARGS");
+            if (nativeArgs != null && !nativeArgs.isEmpty()) extraArgs += " "+nativeArgs;
             command = loader+" --library-path "+rootFS.getLibDir()+" "+nativeFile.getPath()+extraArgs;
             File workDir = nativeFile.getParentFile();
             if (workDir != null && workDir.isDirectory()) rootDir = workDir;
@@ -254,4 +275,4 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             }
         }
     }
-                                  }
+                    }
