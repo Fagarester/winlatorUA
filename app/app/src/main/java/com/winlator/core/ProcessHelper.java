@@ -66,7 +66,14 @@ public abstract class ProcessHelper {
         int pid = -1;
         try {
             ProcessBuilder processBuilder = (new ProcessBuilder(splitCommand(command))).directory(workingDir);
-            if (debugCallbacks.isEmpty()) processBuilder.redirectOutput(new File("/dev/null")).redirectErrorStream(true);
+            if (debugCallbacks.isEmpty()) {
+                // NATIVE_LOG_FILE: write the program output straight to a file (no UI overhead)
+                String logPath = envVars != null && envVars.has("NATIVE_LOG_FILE") ? envVars.get("NATIVE_LOG_FILE") : null;
+                if (logPath != null && !logPath.isEmpty()) {
+                    processBuilder.redirectOutput(ProcessBuilder.Redirect.appendTo(new File(logPath))).redirectErrorStream(true);
+                }
+                else processBuilder.redirectOutput(new File("/dev/null")).redirectErrorStream(true);
+            }
 
             Map<String, String> environment = processBuilder.environment();
             for (String name : envVars) environment.put(name, envVars.get(name));
