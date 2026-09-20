@@ -11,6 +11,7 @@ import com.winlator.xserver.extensions.Extension;
 import com.winlator.xserver.extensions.GLXExtension;
 import com.winlator.xserver.extensions.MITSHMExtension;
 import com.winlator.xserver.extensions.PresentExtension;
+import com.winlator.xserver.extensions.RandRExtension;
 import com.winlator.xserver.extensions.SyncExtension;
 import com.winlator.xserver.extensions.XComposite;
 
@@ -191,7 +192,8 @@ public class XServer {
             new PresentExtension(this, opcode--),
             new SyncExtension(this, opcode--),
             new XComposite(this, opcode--),
-            new GLXExtension(this, opcode--)
+            new GLXExtension(this, opcode--),
+            new RandRExtension(this, opcode--)
         };
     }
 
@@ -204,4 +206,4 @@ public class XServer {
         DebugDialog debugDialog = activity.getDebugDialog();
         if (debugDialog != null) debugDialog.call("xserver:"+line);
     }
-}
+                               }
