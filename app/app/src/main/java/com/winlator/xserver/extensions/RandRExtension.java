@@ -25,6 +25,7 @@ public class RandRExtension extends Extension {
     private static final int OUTPUT_ID = 0x61;
     private static final int MODE_ID = 0x62;
     private static final int REFRESH_RATE = 60;
+    private static final int GAMMA_SIZE = 256;
     private static final String OUTPUT_NAME = "Android-0";
 
     private static abstract class ClientOpcodes {
@@ -40,7 +41,14 @@ public class RandRExtension extends Extension {
         private static final int GET_OUTPUT_PROPERTY = 15;
         private static final int GET_CRTC_INFO = 20;
         private static final int SET_CRTC_CONFIG = 21;
+        private static final int GET_CRTC_GAMMA_SIZE = 22;
+        private static final int GET_CRTC_GAMMA = 23;
+        private static final int SET_CRTC_GAMMA = 24;
         private static final int GET_SCREEN_RESOURCES_CURRENT = 25;
+        private static final int SET_CRTC_TRANSFORM = 26;
+        private static final int GET_CRTC_TRANSFORM = 27;
+        private static final int GET_PANNING = 28;
+        private static final int SET_PANNING = 29;
         private static final int SET_OUTPUT_PRIMARY = 30;
         private static final int GET_OUTPUT_PRIMARY = 31;
     }
@@ -234,6 +242,73 @@ public class RandRExtension extends Extension {
         }
     }
 
+    private void getCrtcGammaSize(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4);
+
+        try (XStreamLock lock = outputStream.lock()) {
+            writeHeader(client, outputStream, 0);
+            outputStream.writeShort((short)GAMMA_SIZE);
+            outputStream.writePad(22);
+        }
+    }
+
+    private void getCrtcGamma(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4);
+
+        try (XStreamLock lock = outputStream.lock()) {
+            writeHeader(client, outputStream, GAMMA_SIZE * 3 * 2 / 4);
+            outputStream.writeShort((short)GAMMA_SIZE);
+            outputStream.writePad(22);
+
+            for (int channel = 0; channel < 3; channel++) {
+                for (int i = 0; i < GAMMA_SIZE; i++) outputStream.writeShort((short)(i * 257));
+            }
+        }
+    }
+
+    private void getCrtcTransform(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4);
+
+        try (XStreamLock lock = outputStream.lock()) {
+            writeHeader(client, outputStream, 16);
+            writeIdentityTransform(outputStream);
+            outputStream.writeByte((byte)0);
+            outputStream.writePad(3);
+            writeIdentityTransform(outputStream);
+            outputStream.writePad(4);
+            outputStream.writeShort((short)0);
+            outputStream.writeShort((short)0);
+            outputStream.writeShort((short)0);
+            outputStream.writeShort((short)0);
+        }
+    }
+
+    private void writeIdentityTransform(XOutputStream outputStream) {
+        for (int i = 0; i < 9; i++) {
+            outputStream.writeInt((i % 4 == 0) ? 0x10000 : 0);
+        }
+    }
+
+    private void getPanning(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4);
+
+        try (XStreamLock lock = outputStream.lock()) {
+            writeHeader(client, outputStream, 1);
+            outputStream.writeInt(TIMESTAMP);
+            outputStream.writePad(24);
+        }
+    }
+
+    private void setPanning(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        client.skipRequest();
+
+        try (XStreamLock lock = outputStream.lock()) {
+            writeHeader(client, outputStream, 0);
+            outputStream.writeInt(TIMESTAMP);
+            outputStream.writePad(20);
+        }
+    }
+
     @Override
     public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int opcode = client.getRequestData() & 0xff;
@@ -266,6 +341,23 @@ public class RandRExtension extends Extension {
             case ClientOpcodes.GET_OUTPUT_PROPERTY:
                 getOutputProperty(client, inputStream, outputStream);
                 break;
+            case ClientOpcodes.GET_CRTC_GAMMA_SIZE:
+                getCrtcGammaSize(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.GET_CRTC_GAMMA:
+                getCrtcGamma(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.GET_CRTC_TRANSFORM:
+                getCrtcTransform(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.GET_PANNING:
+                getPanning(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.SET_PANNING:
+                setPanning(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.SET_CRTC_GAMMA:
+            case ClientOpcodes.SET_CRTC_TRANSFORM:
             case ClientOpcodes.SELECT_INPUT:
             case ClientOpcodes.SET_SCREEN_SIZE:
             case ClientOpcodes.SET_OUTPUT_PRIMARY:
