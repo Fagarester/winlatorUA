@@ -120,13 +120,31 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             if (nativeSrc != null && !nativeSrc.isEmpty()) {
                 File srcDir = new File(nativeSrc);
                 File dstDir = new File(rootDir, RootFS.HOME_PATH+"/"+srcDir.getName());
-                if (srcDir.isDirectory() && !dstDir.exists()) FileUtils.copy(srcDir, dstDir);
+                File doneMark = new File(dstDir, ".copy_done");
+                if (srcDir.isDirectory() && !doneMark.exists()) {
+                    // copy was never finished (or first run): start clean, then mark as done
+                    FileUtils.delete(dstDir);
+                    if (FileUtils.copy(srcDir, dstDir)) {
+                        try { doneMark.createNewFile(); } catch (Exception e) {}
+                    }
+                }
             }
 
             File nativeFile = new File(nativeExec.startsWith("/") && !nativeExec.startsWith("/storage") ? rootDir+nativeExec : nativeExec);
             nativeFile.setExecutable(true);
             String loader = rootFS.getLibDir()+"/ld-linux-aarch64.so.1";
-            command = loader+" --library-path "+rootFS.getLibDir()+" "+nativeFile.getPath();
+            // Because the game is started through the glibc loader, /proc/self/exe points to the
+            // loader (rootfs/usr/lib), so Factorio cannot find its data folder by itself.
+            // Give it an explicit config with absolute read-data / write-data paths.
+            String extraArgs = "";
+            File binDir = nativeFile.getParentFile();
+            File gameRoot = (binDir != null && binDir.getParentFile() != null) ? binDir.getParentFile().getParentFile() : null;
+            if (gameRoot != null && (new File(gameRoot, "data")).isDirectory()) {
+                File configFile = new File(gameRoot, "config-native.ini");
+                FileUtils.writeString(configFile, "[path]\nread-data="+gameRoot+"/data\nwrite-data="+gameRoot+"\n");
+                extraArgs = " --config "+configFile.getPath();
+            }
+            command = loader+" --library-path "+rootFS.getLibDir()+" "+nativeFile.getPath()+extraArgs;
             File workDir = nativeFile.getParentFile();
             if (workDir != null && workDir.isDirectory()) rootDir = workDir;
             envVars.remove("LD_PRELOAD");
@@ -226,4 +244,4 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             }
         }
     }
-}
+                     }
