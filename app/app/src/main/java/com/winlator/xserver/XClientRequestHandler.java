@@ -5,6 +5,7 @@ import com.winlator.xconnector.RequestHandler;
 import com.winlator.xconnector.XInputStream;
 import com.winlator.xconnector.XOutputStream;
 import com.winlator.xconnector.XStreamLock;
+import com.winlator.xserver.errors.BadImplementation;
 import com.winlator.xserver.errors.XRequestError;
 import com.winlator.xserver.extensions.Extension;
 import com.winlator.xserver.requests.AtomRequests;
@@ -424,8 +425,82 @@ public class XClientRequestHandler implements RequestHandler {
                     case ClientOpcodes.NO_OPERATION:
                         client.skipRequest();
                         break;
+                    // Requests without a reply that native Xlib/SDL programs may send. Accepted and ignored.
+                    case 6: case 11: case 13: case 28: case 29: case 30: case 32: case 33: case 34: case 35:
+                    case 36: case 37: case 46: case 51: case 57: case 63: case 64: case 68: case 69: case 71:
+                    case 74: case 75: case 76: case 77: case 80: case 81: case 82: case 88: case 89: case 90:
+                    case 96: case 100: case 102: case 105: case 109: case 111: case 112: case 114:
+                        client.skipRequest();
+                        break;
+                    case 31: // GrabKeyboard -> status Success
+                        client.skipRequest();
+                        try (XStreamLock lock = outputStream.lock()) {
+                            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+                            outputStream.writeByte((byte)0);
+                            outputStream.writeShort(client.getSequenceNumber());
+                            outputStream.writeInt(0);
+                            outputStream.writePad(24);
+                        }
+                        break;
+                    case 44: // QueryKeymap -> no keys pressed
+                        client.skipRequest();
+                        try (XStreamLock lock = outputStream.lock()) {
+                            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+                            outputStream.writeByte((byte)0);
+                            outputStream.writeShort(client.getSequenceNumber());
+                            outputStream.writeInt(2);
+                            outputStream.writePad(32);
+                        }
+                        break;
+                    case 97: { // QueryBestSize -> echo the requested size
+                        inputStream.skip(4);
+                        short bestWidth = inputStream.readShort();
+                        short bestHeight = inputStream.readShort();
+                        client.skipRequest();
+                        try (XStreamLock lock = outputStream.lock()) {
+                            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+                            outputStream.writeByte((byte)0);
+                            outputStream.writeShort(client.getSequenceNumber());
+                            outputStream.writeInt(0);
+                            outputStream.writeShort(bestWidth);
+                            outputStream.writeShort(bestHeight);
+                            outputStream.writePad(20);
+                        }
+                        break;
+                    }
+                    case 103: // GetKeyboardControl
+                        client.skipRequest();
+                        try (XStreamLock lock = outputStream.lock()) {
+                            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+                            outputStream.writeByte((byte)1);
+                            outputStream.writeShort(client.getSequenceNumber());
+                            outputStream.writeInt(5);
+                            outputStream.writeInt(0);
+                            outputStream.writeByte((byte)0);
+                            outputStream.writeByte((byte)50);
+                            outputStream.writeShort((short)400);
+                            outputStream.writeShort((short)100);
+                            outputStream.writePad(2);
+                            outputStream.writePad(32);
+                        }
+                        break;
+                    case 106: // GetPointerControl
+                        client.skipRequest();
+                        try (XStreamLock lock = outputStream.lock()) {
+                            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+                            outputStream.writeByte((byte)0);
+                            outputStream.writeShort(client.getSequenceNumber());
+                            outputStream.writeInt(0);
+                            outputStream.writeShort((short)2);
+                            outputStream.writeShort((short)1);
+                            outputStream.writeShort((short)4);
+                            outputStream.writePad(18);
+                        }
+                        break;
                     default:
-                        throw new UnsupportedOperationException("Unsupported opcode "+opcode+".");
+                        // Unknown request: report it to the client (and the debug log) instead of
+                        // leaving the request unread, which would desynchronize the connection.
+                        throw new BadImplementation();
                 }
             }
         }
