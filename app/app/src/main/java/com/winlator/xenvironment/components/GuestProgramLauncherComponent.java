@@ -181,7 +181,37 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             }
             String nativeArgs = envVars.get("NATIVE_ARGS");
             if (nativeArgs != null && !nativeArgs.isEmpty()) extraArgs += " "+nativeArgs;
-            command = loader+" --library-path "+rootFS.getLibDir()+" "+nativeFile.getPath()+extraArgs;
+
+            // NATIVE_MESA_SRC: use a Mesa build with the Freedreno/KGSL OpenGL driver (direct OpenGL, no Zink).
+            //   NATIVE_MESA_SRC = /storage/emulated/0/Download/mesa   (folder that contains lib/ and dri/)
+            // The folder is copied once into rootfs/opt/mesa-kgsl and put first in the library path.
+            // Variables set by the container (MESA_LOADER_DRIVER_OVERRIDE, LIBGL_DRIVERS_PATH, ...) win over the defaults below.
+            String libPath = rootFS.getLibDir().getPath();
+            String mesaSrc = envVars.get("NATIVE_MESA_SRC");
+            if (mesaSrc != null && !mesaSrc.isEmpty()) {
+                File mesaSrcDir = new File(mesaSrc);
+                File mesaDir = new File(rootDir, "/opt/mesa-kgsl");
+                File mesaMark = new File(mesaDir, ".copy_done");
+                if (mesaSrcDir.isDirectory() && !mesaMark.exists()) {
+                    FileUtils.delete(mesaDir);
+                    if (FileUtils.copy(mesaSrcDir, mesaDir)) {
+                        try { mesaMark.createNewFile(); } catch (Exception e) {}
+                    }
+                }
+                if (mesaMark.exists()) {
+                    libPath = mesaDir+"/lib:"+libPath;
+                    envVars.put("LD_LIBRARY_PATH", libPath);
+                    if (!envVars.has("LIBGL_DRIVERS_PATH")) envVars.put("LIBGL_DRIVERS_PATH", mesaDir+"/dri");
+                    if (!envVars.has("MESA_LOADER_DRIVER_OVERRIDE")) envVars.put("MESA_LOADER_DRIVER_OVERRIDE", "kgsl");
+                    if (!envVars.has("__GLX_VENDOR_LIBRARY_NAME")) envVars.put("__GLX_VENDOR_LIBRARY_NAME", "mesa");
+                    // Zink/Vortek specific settings from the graphics driver setup must not leak into the Freedreno path
+                    envVars.remove("GALLIUM_DRIVER");
+                    envVars.remove("ZINK_CONTEXT_THREADED");
+                    envVars.remove("MESA_GL_VERSION_OVERRIDE");
+                }
+            }
+
+            command = loader+" --library-path "+libPath+" "+nativeFile.getPath()+extraArgs;
             File workDir = nativeFile.getParentFile();
             if (workDir != null && workDir.isDirectory()) rootDir = workDir;
             envVars.remove("LD_PRELOAD");
