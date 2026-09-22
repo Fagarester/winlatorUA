@@ -214,33 +214,37 @@ public class GLXExtension extends Extension {
     private void getVisualConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
 
+        // Mesa's own client parser (__glXInitializeVisualConfigFromTags, __GLX_MIN_CONFIG_PROPS = 18)
+        // requires at least 18 positional INT32s per visual, with the visual ID as the FIRST value
+        // (not a separate field before numProps values). Reporting fewer makes the client bail out
+        // without reading the payload, leaving it in the socket queue and crashing the next reply.
         final int numVisuals = 1;
-        final int numProps = 17;
+        final int numProps = 18;
         final int GLX_TRUE_COLOR = 4;
         final int[] values = new int[]{
-            GLX_TRUE_COLOR, // class
-            1,              // rgba
-            8, 8, 8, 8,     // red, green, blue, alpha size
-            0, 0, 0, 0,     // accum red, green, blue, alpha size
-            1,              // doublebuffer
-            0,              // stereo
-            32,             // buffer size
-            24,             // depth size
-            8,              // stencil size
-            0,              // aux buffers
-            0               // level
+            DEFAULT_FBCONFIG_ID, // visual id
+            GLX_TRUE_COLOR,      // class
+            1,                   // rgba
+            8, 8, 8, 8,          // red, green, blue, alpha size
+            0, 0, 0, 0,          // accum red, green, blue, alpha size
+            1,                   // doublebuffer
+            0,                   // stereo
+            32,                  // buffer size
+            24,                  // depth size
+            8,                   // stencil size
+            0,                   // aux buffers
+            0                    // level
         };
 
         try (XStreamLock lock = outputStream.lock()) {
             outputStream.writeByte(RESPONSE_CODE_SUCCESS);
             outputStream.writeByte((byte)0);
             outputStream.writeShort(client.getSequenceNumber());
-            outputStream.writeInt(numVisuals * (numProps + 1));
+            outputStream.writeInt(numVisuals * numProps);
             outputStream.writeInt(numVisuals);
             outputStream.writeInt(numProps);
             outputStream.writePad(16);
 
-            outputStream.writeInt(DEFAULT_FBCONFIG_ID);
             for (int v : values) outputStream.writeInt(v);
         }
     }
