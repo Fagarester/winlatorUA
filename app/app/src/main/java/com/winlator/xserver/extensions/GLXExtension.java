@@ -54,6 +54,7 @@ public class GLXExtension extends Extension {
         private static final byte QUERY_EXTENSIONS_STRING = 18;
         private static final byte QUERY_SERVER_STRING = 19;
         private static final byte GET_FB_CONFIGS = 21;
+        private static final byte GET_VISUAL_CONFIGS = 14;
         private static final byte CREATE_CONTEXT_ATTRIBS_ARB = 34;
     }
 
@@ -206,6 +207,44 @@ public class GLXExtension extends Extension {
         }
     }
 
+    // Legacy pre-1.3 GLX request. Newer Mesa clients (kgsl, Zink 26+) try this before
+    // falling back to DRI3, and treat a BadImplementation error as "no usable visual at all",
+    // which aborts window creation entirely. The reply layout is a positional (no property-id)
+    // list, unlike GET_FB_CONFIGS. numProps=17 matches the pre-multisample GLX 1.1 property set.
+    private void getVisualConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        inputStream.skip(4);
+
+        final int numVisuals = 1;
+        final int numProps = 17;
+        final int GLX_TRUE_COLOR = 4;
+        final int[] values = new int[]{
+            GLX_TRUE_COLOR, // class
+            1,              // rgba
+            8, 8, 8, 8,     // red, green, blue, alpha size
+            0, 0, 0, 0,     // accum red, green, blue, alpha size
+            1,              // doublebuffer
+            0,              // stereo
+            32,             // buffer size
+            24,             // depth size
+            8,              // stencil size
+            0,              // aux buffers
+            0               // level
+        };
+
+        try (XStreamLock lock = outputStream.lock()) {
+            outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            outputStream.writeByte((byte)0);
+            outputStream.writeShort(client.getSequenceNumber());
+            outputStream.writeInt(numVisuals * (numProps + 1));
+            outputStream.writeInt(numVisuals);
+            outputStream.writeInt(numProps);
+            outputStream.writePad(16);
+
+            outputStream.writeInt(DEFAULT_FBCONFIG_ID);
+            for (int v : values) outputStream.writeInt(v);
+        }
+    }
+
     private void getFBConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
 
@@ -299,6 +338,9 @@ public class GLXExtension extends Extension {
                 break;
             case ClientOpcodes.QUERY_SERVER_STRING:
                 queryServerString(client, inputStream, outputStream);
+                break;
+            case ClientOpcodes.GET_VISUAL_CONFIGS:
+                getVisualConfigs(client, inputStream, outputStream);
                 break;
             case ClientOpcodes.GET_FB_CONFIGS:
                 getFBConfigs(client, inputStream, outputStream);
