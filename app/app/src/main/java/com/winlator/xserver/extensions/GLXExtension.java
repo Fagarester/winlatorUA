@@ -158,7 +158,6 @@ public class GLXExtension extends Extension {
             outputStream.writePad(16);
         }
     }
-
     private void queryExtensionsString(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
         int length = glxExtensions.length();
@@ -205,8 +204,10 @@ public class GLXExtension extends Extension {
             outputStream.writeString8(string);
         }
     }
+
     private void getVisualConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
+        android.util.Log.d("GLX_DEBUG", "getVisualConfigs called, visualId=" + xServer.pixmapManager.visual.id);
 
         final int numVisuals = 1;
         final int numProps = 18;
@@ -241,6 +242,7 @@ public class GLXExtension extends Extension {
 
     private void getFBConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
+        android.util.Log.d("GLX_DEBUG", "getFBConfigs called, visualId=" + xServer.pixmapManager.visual.id);
 
         final int numFBConfigs = 1;
         final int numProperties = 12;
@@ -276,7 +278,6 @@ public class GLXExtension extends Extension {
             }
         }
     }
-
     private void createContextAttribsARB(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int contextId = inputStream.readInt();
         int fbConfigId = inputStream.readInt();
@@ -308,6 +309,7 @@ public class GLXExtension extends Extension {
             outputStream.writePad(28);
         }
     }
+
     @Override
     public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int opcode = client.getRequestData();
