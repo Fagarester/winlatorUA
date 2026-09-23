@@ -67,7 +67,6 @@ public class GLXExtension extends Extension {
     public byte getFirstErrorId() {
         return Byte.MIN_VALUE;
     }
-
     private void createGLContext(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int contextId = inputStream.readInt();
 
@@ -206,34 +205,25 @@ public class GLXExtension extends Extension {
             outputStream.writeString8(string);
         }
     }
-
-    // Legacy pre-1.3 GLX request. Newer Mesa clients (kgsl, Zink 26+) try this before
-    // falling back to DRI3, and treat a BadImplementation error as "no usable visual at all",
-    // which aborts window creation entirely. The reply layout is a positional (no property-id)
-    // list, unlike GET_FB_CONFIGS. numProps=17 matches the pre-multisample GLX 1.1 property set.
     private void getVisualConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
 
-        // Mesa's own client parser (__glXInitializeVisualConfigFromTags, __GLX_MIN_CONFIG_PROPS = 18)
-        // requires at least 18 positional INT32s per visual, with the visual ID as the FIRST value
-        // (not a separate field before numProps values). Reporting fewer makes the client bail out
-        // without reading the payload, leaving it in the socket queue and crashing the next reply.
         final int numVisuals = 1;
         final int numProps = 18;
         final int GLX_TRUE_COLOR = 4;
         final int[] values = new int[]{
-            DEFAULT_FBCONFIG_ID, // visual id
-            GLX_TRUE_COLOR,      // class
-            1,                   // rgba
-            8, 8, 8, 8,          // red, green, blue, alpha size
-            0, 0, 0, 0,          // accum red, green, blue, alpha size
-            1,                   // doublebuffer
-            0,                   // stereo
-            32,                  // buffer size
-            24,                  // depth size
-            8,                   // stencil size
-            0,                   // aux buffers
-            0                    // level
+            xServer.pixmapManager.visual.id,
+            GLX_TRUE_COLOR,
+            1,
+            8, 8, 8, 8,
+            0, 0, 0, 0,
+            1,
+            0,
+            32,
+            24,
+            8,
+            0,
+            0
         };
 
         try (XStreamLock lock = outputStream.lock()) {
@@ -253,9 +243,10 @@ public class GLXExtension extends Extension {
         inputStream.skip(4);
 
         final int numFBConfigs = 1;
-        final int numProperties = 11;
+        final int numProperties = 12;
         final int[] properties = new int[]{
             GLXEnums.GLX_FBCONFIG_ID, DEFAULT_FBCONFIG_ID,
+            GLXEnums.GLX_VISUAL_ID, xServer.pixmapManager.visual.id,
             GLXEnums.GLX_RED_SIZE, 8,
             GLXEnums.GLX_GREEN_SIZE, 8,
             GLXEnums.GLX_BLUE_SIZE, 8,
@@ -317,7 +308,6 @@ public class GLXExtension extends Extension {
             outputStream.writePad(28);
         }
     }
-
     @Override
     public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int opcode = client.getRequestData();
@@ -431,3 +421,4 @@ public class GLXExtension extends Extension {
 
     private native void destroyGLXContext(long contextPtr);
 }
+
