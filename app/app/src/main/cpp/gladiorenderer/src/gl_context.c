@@ -290,6 +290,9 @@ void destroyGLContext(JNIEnv* env, GLContext* context) {
     free(context);
 }
 
+#include <android/log.h>
+#define HANGTAG "HANG_DEBUG"
+
 GLXContext* createGLXContext(int contextId, GLXContext* sharedContext) {
     static const EGLint confAttribList[] = {
         EGL_RENDERABLE_TYPE, EGL_OPENGL_ES3_BIT,
@@ -305,19 +308,24 @@ GLXContext* createGLXContext(int contextId, GLXContext* sharedContext) {
     };
     EGLBoolean success;
 
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "1: eglGetDisplay start");
     EGLDisplay eglDisplay = eglGetDisplay(EGL_DEFAULT_DISPLAY);
     if (!eglDisplay) return NULL;
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "2: eglInitialize start");
 
     EGLint major, minor;
     success = eglInitialize(eglDisplay, &major, &minor);
     if (!success) return NULL;
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "3: eglChooseConfig start");
 
     int numConfigs;
     EGLConfig eglConfig;
     success = eglChooseConfig(eglDisplay, confAttribList, &eglConfig, 1, &numConfigs);
     if (!success || numConfigs != 1) return NULL;
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "4: eglCreateContext start");
 
     EGLContext eglContext = eglCreateContext(eglDisplay, eglConfig, sharedContext ? sharedContext->eglContext : globalEGLContext, ctxAttribList);
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "5: eglCreateContext done, ctx=%p", (void*)eglContext);
 
     GLXContext* context = calloc(1, sizeof(GLXContext));
     context->eglContext = eglContext;
@@ -325,11 +333,16 @@ GLXContext* createGLXContext(int contextId, GLXContext* sharedContext) {
     GLVertexArrayObject_setBound(&context->renderer.clientState, 0);
     GLClientState_init(&context->renderer.clientState, sharedContext ? &sharedContext->renderer.clientState : NULL);
 
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "6: GLX_CONTEXT_LOCK start");
     GLX_CONTEXT_LOCK();
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "7: lock acquired, eglMakeCurrent start");
     eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, context->eglContext);
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "8: GLRenderer_initOnEGLContext start");
     GLRenderer_initOnEGLContext(&context->renderer);
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "9: done, unlocking");
     eglMakeCurrent(eglDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
     GLX_CONTEXT_UNLOCK();
+    __android_log_print(ANDROID_LOG_DEBUG, HANGTAG, "10: fully done");
     return context;
 }
 
