@@ -130,10 +130,15 @@ public class GLXExtension extends Extension {
         xServer.debugPrint("GLX createContext: about to write reply");
 
         try (XStreamLock lock = outputStream.lock()) {
+            xServer.debugPrint("GLX createContext: lock acquired, writing bytes");
             outputStream.writeByte(RESPONSE_CODE_SUCCESS);
+            xServer.debugPrint("GLX createContext: wrote byte 1");
             outputStream.writeByte((byte)0);
+            xServer.debugPrint("GLX createContext: wrote byte 2");
             outputStream.writeShort(client.getSequenceNumber());
+            xServer.debugPrint("GLX createContext: wrote short");
             outputStream.writePad(28);
+            xServer.debugPrint("GLX createContext: wrote pad, done");
         }
     }
 
