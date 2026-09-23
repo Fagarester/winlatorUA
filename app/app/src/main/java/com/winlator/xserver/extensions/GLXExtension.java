@@ -99,7 +99,9 @@ public class GLXExtension extends Extension {
     }
 
     private void createGLXContextForClient(XClient client, int contextId, int shareContextId) throws IOException, XRequestError {
+        xServer.debugPrint("GLX createGLXContextForClient: before lock");
         synchronized (clientGLXContexts) {
+            xServer.debugPrint("GLX createGLXContextForClient: lock acquired");
             SparseLongArray contexts = clientGLXContexts.get(client.fd);
             if (contexts == null) {
                 clientGLXContexts.put(client.fd, contexts = new SparseLongArray());
@@ -107,13 +109,17 @@ public class GLXExtension extends Extension {
             }
 
             long sharedContextPtr = shareContextId > 0 ? contexts.get(shareContextId) : 0;
+            xServer.debugPrint("GLX createGLXContextForClient: calling native createGLXContext");
             long context = createGLXContext(contextId, sharedContextPtr);
+            xServer.debugPrint("GLX createGLXContextForClient: native call returned, context=" + context);
             if (context == 0) throw new BadAlloc();
             contexts.put(contextId, context);
         }
+        xServer.debugPrint("GLX createGLXContextForClient: done");
     }
 
     private void createContext(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
+        xServer.debugPrint("GLX createContext: START");
         int contextId = inputStream.readInt();
         inputStream.skip(8);
         int shareList = inputStream.readInt();
@@ -121,6 +127,7 @@ public class GLXExtension extends Extension {
 
         if (contextId == 0) throw new GLXBadContext();
         createGLXContextForClient(client, contextId, shareList);
+        xServer.debugPrint("GLX createContext: about to write reply");
 
         try (XStreamLock lock = outputStream.lock()) {
             outputStream.writeByte(RESPONSE_CODE_SUCCESS);
@@ -158,6 +165,7 @@ public class GLXExtension extends Extension {
             outputStream.writePad(16);
         }
     }
+
     private void queryExtensionsString(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
         int length = glxExtensions.length();
@@ -204,10 +212,8 @@ public class GLXExtension extends Extension {
             outputStream.writeString8(string);
         }
     }
-
     private void getVisualConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
-        android.util.Log.d("GLX_DEBUG", "getVisualConfigs called, visualId=" + xServer.pixmapManager.visual.id);
 
         final int numVisuals = 1;
         final int numProps = 18;
@@ -242,7 +248,6 @@ public class GLXExtension extends Extension {
 
     private void getFBConfigs(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         inputStream.skip(4);
-        android.util.Log.d("GLX_DEBUG", "getFBConfigs called, visualId=" + xServer.pixmapManager.visual.id);
 
         final int numFBConfigs = 1;
         final int numProperties = 12;
@@ -278,6 +283,7 @@ public class GLXExtension extends Extension {
             }
         }
     }
+
     private void createContextAttribsARB(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int contextId = inputStream.readInt();
         int fbConfigId = inputStream.readInt();
@@ -309,10 +315,10 @@ public class GLXExtension extends Extension {
             outputStream.writePad(28);
         }
     }
-
     @Override
     public void handleRequest(XClient client, XInputStream inputStream, XOutputStream outputStream) throws IOException, XRequestError {
         int opcode = client.getRequestData();
+        xServer.debugPrint("GLX handleRequest: opcode=" + opcode);
         switch (opcode) {
             case ClientOpcodes.CREATE_GL_CONTEXT:
                 createGLContext(client, inputStream, outputStream);
