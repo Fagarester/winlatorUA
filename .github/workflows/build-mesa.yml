@@ -9,26 +9,51 @@ on:
         default: 'mesa-24.2.8'
 
 jobs:
+
+  # ============================================================
+  # ZINK
+  # ============================================================
   build-zink:
     runs-on: ubuntu-24.04-arm
+
     steps:
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            meson ninja-build python3-mako python3-yaml \
-            bison flex pkg-config zstd \
-            libdrm-dev libx11-dev libxext-dev libxcb1-dev \
-            libxcb-dri3-dev libxcb-present-dev libxcb-randr0-dev \
-            libxshmfence-dev libexpat1-dev libxrandr-dev \
-            libwayland-dev wayland-protocols git
+            meson \
+            ninja-build \
+            python3-mako \
+            python3-yaml \
+            bison \
+            flex \
+            pkg-config \
+            zstd \
+            git \
+            libdrm-dev \
+            libx11-dev \
+            libx11-xcb-dev \
+            libxext-dev \
+            libxcb1-dev \
+            libxcb-glx0-dev \
+            libxcb-dri3-dev \
+            libxcb-present-dev \
+            libxcb-randr0-dev \
+            libxcb-shm0-dev \
+            libxcb-sync-dev \
+            libxcb-xfixes0-dev \
+            libxshmfence-dev \
+            libxrandr-dev \
+            libexpat1-dev \
+            libwayland-dev \
+            wayland-protocols
 
       - name: Clone Mesa
         run: |
           git clone --depth 1 --branch "${{ github.event.inputs.mesa_ref }}" \
-            https://freedesktop.org mesa-src
+            https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
 
-      - name: Configure (Zink, glx=xlib, no dri3)
+      - name: Configure Zink
         working-directory: mesa-src
         run: |
           meson setup build \
@@ -36,55 +61,92 @@ jobs:
             -Dplatforms=x11 \
             -Dgallium-va=disabled \
             -Dllvm=disabled \
+            -Dshared-llvm=disabled \
             -Dgallium-drivers=zink \
-            -Ddri3=disabled \
             -Dvulkan-drivers= \
+            -Ddri3=disabled \
             -Dglx=xlib \
             -Dlmsensors=disabled \
-            -Dprefix=/data/data/com.winlator/files/rootfs/usr \
+            -Dprefix=/usr \
+            -Dlibdir=lib \
             -Dbuildtype=release
 
-      - name: Build
+      - name: Build Zink
         working-directory: mesa-src
-        run: ninja -C build -j"$(nproc)"
-
-      - name: Package into winlator .tzst layout
         run: |
-          mkdir -p stage/usr/lib
-          find mesa-src/build -iname "libGL.so*" -print
-          cp mesa-src/build/src/gallium/targets/xlib/libGL.so.1.7.0 stage/usr/lib/libGL.so.1.7.0 \
-            || cp "$(find mesa-src/build -iname 'libGL.so.1.7.0' | head -1)" stage/usr/lib/libGL.so.1.7.0
-          cd stage
-          tar -cf - -C . . | zstd -19 -o ../zink-custom.tzst
-          cd ..
-          ls -la zink-custom.tzst
+          ninja -C build -j"$(nproc)"
 
-      - name: Upload artifact
+      - name: Install Zink into package
+        working-directory: mesa-src
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/stage"
+          mkdir -p "$GITHUB_WORKSPACE/stage"
+
+          DESTDIR="$GITHUB_WORKSPACE/stage" \
+            ninja -C build install
+
+          echo "=== Installed files ==="
+          find "$GITHUB_WORKSPACE/stage" -type f -o -type l | sort
+
+      - name: Create Zink package
+        run: |
+          cd "$GITHUB_WORKSPACE/stage"
+          tar -cf - . | zstd -19 -o "$GITHUB_WORKSPACE/zink-custom.tzst"
+
+          echo "=== Package ==="
+          ls -lh "$GITHUB_WORKSPACE/zink-custom.tzst"
+
+      - name: Upload Zink artifact
         uses: actions/upload-artifact@v4
         with:
           name: zink-custom-tzst
           path: zink-custom.tzst
 
+
+  # ============================================================
+  # FREEDRENO OPENGL / KGSL
+  # ============================================================
   build-opengl:
     runs-on: ubuntu-24.04-arm
+
     steps:
       - name: Install build dependencies
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            meson ninja-build python3-mako python3-yaml \
-            bison flex pkg-config zstd \
-            libdrm-dev libx11-dev libxext-dev libxcb1-dev \
-            libxcb-dri3-dev libxcb-present-dev libxcb-randr0-dev \
-            libxshmfence-dev libexpat1-dev libxrandr-dev \
-            libwayland-dev wayland-protocols git
+            meson \
+            ninja-build \
+            python3-mako \
+            python3-yaml \
+            bison \
+            flex \
+            pkg-config \
+            zstd \
+            git \
+            libdrm-dev \
+            libx11-dev \
+            libx11-xcb-dev \
+            libxext-dev \
+            libxcb1-dev \
+            libxcb-glx0-dev \
+            libxcb-dri3-dev \
+            libxcb-present-dev \
+            libxcb-randr0-dev \
+            libxcb-shm0-dev \
+            libxcb-sync-dev \
+            libxcb-xfixes0-dev \
+            libxshmfence-dev \
+            libxrandr-dev \
+            libexpat1-dev \
+            libwayland-dev \
+            wayland-protocols
 
       - name: Clone Mesa
         run: |
           git clone --depth 1 --branch "${{ github.event.inputs.mesa_ref }}" \
-            https://freedesktop.org mesa-src
+            https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
 
-      - name: Configure (native Freedreno OpenGL, kgsl, glx=xlib, no dri3)
+      - name: Configure Freedreno OpenGL
         working-directory: mesa-src
         run: |
           meson setup build \
@@ -92,31 +154,44 @@ jobs:
             -Dplatforms=x11 \
             -Dgallium-va=disabled \
             -Dllvm=disabled \
+            -Dshared-llvm=disabled \
             -Dgallium-drivers=freedreno \
             -Dfreedreno-kmds=kgsl \
-            -Ddri3=disabled \
             -Dvulkan-drivers= \
+            -Ddri3=disabled \
             -Dglx=xlib \
             -Dlmsensors=disabled \
-            -Dprefix=/data/data/com.winlator/files/rootfs/usr \
+            -Dprefix=/usr \
+            -Dlibdir=lib \
             -Dbuildtype=release
 
-      - name: Build
+      - name: Build Freedreno
         working-directory: mesa-src
-        run: ninja -C build -j"$(nproc)"
-
-      - name: Package into winlator .tzst layout
         run: |
-          mkdir -p stage/usr/lib
-          cp "$(find mesa-src/build -iname 'libGL.so.1.7.0' | head -1)" stage/usr/lib/libGL.so.1.7.0
-          cd stage
-          tar -cf - -C . . | zstd -19 -o ../opengl-1.0.tzst
-          cd ..
-          ls -la opengl-1.0.tzst
+          ninja -C build -j"$(nproc)"
 
-      - name: Upload artifact
+      - name: Install Freedreno into package
+        working-directory: mesa-src
+        run: |
+          rm -rf "$GITHUB_WORKSPACE/stage"
+          mkdir -p "$GITHUB_WORKSPACE/stage"
+
+          DESTDIR="$GITHUB_WORKSPACE/stage" \
+            ninja -C build install
+
+          echo "=== Installed files ==="
+          find "$GITHUB_WORKSPACE/stage" -type f -o -type l | sort
+
+      - name: Create OpenGL package
+        run: |
+          cd "$GITHUB_WORKSPACE/stage"
+          tar -cf - . | zstd -19 -o "$GITHUB_WORKSPACE/opengl-1.0.tzst"
+
+          echo "=== Package ==="
+          ls -lh "$GITHUB_WORKSPACE/opengl-1.0.tzst"
+
+      - name: Upload OpenGL artifact
         uses: actions/upload-artifact@v4
         with:
           name: opengl-freedreno-tzst
           path: opengl-1.0.tzst
-          
