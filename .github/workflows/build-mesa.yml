@@ -36,6 +36,7 @@ jobs:
             libxext-dev \
             libxcb1-dev \
             libxcb-glx0-dev \
+            libxcb-dri2-0-dev \
             libxcb-dri3-dev \
             libxcb-present-dev \
             libxcb-randr0-dev \
@@ -62,10 +63,15 @@ jobs:
             -Dgallium-va=disabled \
             -Dllvm=disabled \
             -Dshared-llvm=disabled \
+            -Dshared-glapi=enabled \
             -Dgallium-drivers=zink \
             -Dvulkan-drivers= \
-            -Ddri3=disabled \
-            -Dglx=xlib \
+            -Dglx=dri \
+            -Degl=enabled \
+            -Dgles1=enabled \
+            -Dgles2=enabled \
+            -Dgbm=enabled \
+            -Ddri3=enabled \
             -Dlmsensors=disabled \
             -Dprefix=/usr \
             -Dlibdir=lib \
@@ -76,7 +82,7 @@ jobs:
         run: |
           ninja -C build -j"$(nproc)"
 
-      - name: Install Zink into package
+      - name: Install Zink
         working-directory: mesa-src
         run: |
           rm -rf "$GITHUB_WORKSPACE/stage"
@@ -85,15 +91,19 @@ jobs:
           DESTDIR="$GITHUB_WORKSPACE/stage" \
             ninja -C build install
 
-          echo "=== Installed files ==="
-          find "$GITHUB_WORKSPACE/stage" -type f -o -type l | sort
+          echo "===== Installed Zink files ====="
+          find "$GITHUB_WORKSPACE/stage" \
+            \( -type f -o -type l \) \
+            -print | sort
 
       - name: Create Zink package
         run: |
           cd "$GITHUB_WORKSPACE/stage"
-          tar -cf - . | zstd -19 -o "$GITHUB_WORKSPACE/zink-custom.tzst"
 
-          echo "=== Package ==="
+          tar -cf - . | \
+            zstd -19 -T0 -o "$GITHUB_WORKSPACE/zink-custom.tzst"
+
+          echo "===== Zink package ====="
           ls -lh "$GITHUB_WORKSPACE/zink-custom.tzst"
 
       - name: Upload Zink artifact
@@ -129,6 +139,7 @@ jobs:
             libxext-dev \
             libxcb1-dev \
             libxcb-glx0-dev \
+            libxcb-dri2-0-dev \
             libxcb-dri3-dev \
             libxcb-present-dev \
             libxcb-randr0-dev \
@@ -155,11 +166,16 @@ jobs:
             -Dgallium-va=disabled \
             -Dllvm=disabled \
             -Dshared-llvm=disabled \
+            -Dshared-glapi=enabled \
             -Dgallium-drivers=freedreno \
             -Dfreedreno-kmds=kgsl \
             -Dvulkan-drivers= \
-            -Ddri3=disabled \
-            -Dglx=xlib \
+            -Dglx=dri \
+            -Degl=enabled \
+            -Dgles1=enabled \
+            -Dgles2=enabled \
+            -Dgbm=enabled \
+            -Ddri3=enabled \
             -Dlmsensors=disabled \
             -Dprefix=/usr \
             -Dlibdir=lib \
@@ -170,7 +186,7 @@ jobs:
         run: |
           ninja -C build -j"$(nproc)"
 
-      - name: Install Freedreno into package
+      - name: Install Freedreno
         working-directory: mesa-src
         run: |
           rm -rf "$GITHUB_WORKSPACE/stage"
@@ -179,15 +195,19 @@ jobs:
           DESTDIR="$GITHUB_WORKSPACE/stage" \
             ninja -C build install
 
-          echo "=== Installed files ==="
-          find "$GITHUB_WORKSPACE/stage" -type f -o -type l | sort
+          echo "===== Installed Freedreno files ====="
+          find "$GITHUB_WORKSPACE/stage" \
+            \( -type f -o -type l \) \
+            -print | sort
 
       - name: Create OpenGL package
         run: |
           cd "$GITHUB_WORKSPACE/stage"
-          tar -cf - . | zstd -19 -o "$GITHUB_WORKSPACE/opengl-1.0.tzst"
 
-          echo "=== Package ==="
+          tar -cf - . | \
+            zstd -19 -T0 -o "$GITHUB_WORKSPACE/opengl-1.0.tzst"
+
+          echo "===== OpenGL package ====="
           ls -lh "$GITHUB_WORKSPACE/opengl-1.0.tzst"
 
       - name: Upload OpenGL artifact
