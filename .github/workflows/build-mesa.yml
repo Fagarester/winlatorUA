@@ -26,7 +26,7 @@ jobs:
       - name: Clone Mesa
         run: |
           git clone --depth 1 --branch "${{ github.event.inputs.mesa_ref }}" \
-            https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
+            https://freedesktop.org mesa-src
 
       - name: Configure (Zink, glx=xlib, no dri3)
         working-directory: mesa-src
@@ -35,9 +35,7 @@ jobs:
             -Dstrip=true \
             -Dplatforms=x11 \
             -Dgallium-va=disabled \
-            -Ddri-drivers= \
             -Dllvm=disabled \
-            -Dshared-llvm=disabled \
             -Dgallium-drivers=zink \
             -Ddri3=disabled \
             -Dvulkan-drivers= \
@@ -84,7 +82,7 @@ jobs:
       - name: Clone Mesa
         run: |
           git clone --depth 1 --branch "${{ github.event.inputs.mesa_ref }}" \
-            https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
+            https://freedesktop.org mesa-src
 
       - name: Configure (native Freedreno OpenGL, kgsl, glx=xlib, no dri3)
         working-directory: mesa-src
@@ -93,9 +91,7 @@ jobs:
             -Dstrip=true \
             -Dplatforms=x11 \
             -Dgallium-va=disabled \
-            -Ddri-drivers= \
             -Dllvm=disabled \
-            -Dshared-llvm=disabled \
             -Dgallium-drivers=freedreno \
             -Dfreedreno-kmds=kgsl \
             -Ddri3=disabled \
@@ -123,3 +119,4 @@ jobs:
         with:
           name: opengl-freedreno-tzst
           path: opengl-1.0.tzst
+          
