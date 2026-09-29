@@ -772,6 +772,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
                 if (changed || MainActivity.DEBUG_MODE) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/gladio-"+DefaultVersion.GLADIO+".tzst", rootDir);
                 break;
+            case GraphicsDrivers.OPENGL:
+                if (changed || MainActivity.DEBUG_MODE) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/opengl-"+DefaultVersion.OPENGL+".tzst", rootDir);
+                break;
         }
     }
 
