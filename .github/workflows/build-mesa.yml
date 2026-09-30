@@ -199,6 +199,24 @@ jobs:
           echo "===== Installed files ====="
           find "$ROOT" \( -type f -o -type l \) | sort
 
+      - name: Bundle X/xcb libs that rootfs may lack (libxcb-glx etc.)
+        run: |
+          ROOT="stage${PFX%/usr}"; DST="$ROOT/usr/lib"
+          NEED=$(for f in $(find "$ROOT" -type f -name '*.so*'); do
+                   readelf -d "$f" | sed -n 's/.*Shared library: \[\(.*\)\]/\1/p'
+                 done | sort -u)
+          echo "NEEDED by our libs:"; echo "$NEED"
+          for n in $NEED; do
+            case "$n" in
+              libxcb-*|libX11-xcb*|libxshmfence*|libXxf86vm*|libXdamage*|libXfixes*|libXrandr*|libXrender*) ;;
+              *) continue ;;
+            esac
+            [ -e "$DST/$n" ] && continue
+            src=$(ldconfig -p | awk -v n="$n" '$1==n{print $NF; exit}')
+            if [ -n "$src" ]; then cp -L "$src" "$DST/$n"; echo "bundled $n"
+            else echo "::warning::$n not found on runner"; fi
+          done
+
       - name: Package
         run: |
           VER="${MESA_REF#mesa-}"
