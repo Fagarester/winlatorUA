@@ -41,7 +41,7 @@ jobs:
           # Exactly Bruno's Zink flags (xlib GLX, no DRI3)
           - name: zink-xlib
             pkg: zink
-            drivers: zink
+            drivers: softpipe,zink
             glx: xlib
             dri3: disabled
           # Same, but DRI GLX + DRI3 (kopper path) - test if xlib variant misbehaves
@@ -179,9 +179,9 @@ jobs:
           if ! setup "${ARGS[@]}"; then
             echo "::warning::configure failed, last meson log:"; tail -40 build/meson-logs/meson-log.txt || true
             if [ "$GLX" = "xlib" ]; then
-              echo "::warning::retrying xlib variant with swrast+zink"
+              echo "::warning::retrying xlib variant with softpipe+zink"
               rm -rf build
-              ARGS=("${ARGS[@]/-Dgallium-drivers=zink/-Dgallium-drivers=swrast,zink}")
+              ARGS=("${ARGS[@]/-Dgallium-drivers=zink/-Dgallium-drivers=softpipe,zink}")
               setup "${ARGS[@]}"
             else exit 1; fi
           fi
