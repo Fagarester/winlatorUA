@@ -1,39 +1,69 @@
-name: Build Mesa drivers (Zink + Freedreno KGSL)
+name: Build Mesa (Bruno flags) - Zink + Freedreno KGSL
+
+# Flags taken from https://github.com/brunodev85/mesa3d-custom (README):
+#   prefix = /data/data/com.winlator/files/rootfs/usr, Zink: glx=xlib, dri3=disabled, platforms=x11
+# Bruno only ships Zink 22.2.5 (his own patched tree) and has NO freedreno OpenGL recipe.
+# So here: new upstream Mesa + Bruno's flags, optionally + Bruno's Zink diff ported (experimental).
 
 on:
   workflow_dispatch:
     inputs:
       mesa_ref:
-        description: 'Mesa tag/branch (e.g. mesa-26.2.0 or main)'
+        description: 'Mesa tag/branch (mesa-26.2.0, mesa-26.1.5, main ...)'
         required: true
         default: 'mesa-26.2.0'
       runner:
-        description: 'ARM runner (22.04 = older glibc = safer for rootfs)'
+        description: 'ARM runner'
         required: true
         type: choice
-        default: 'ubuntu-22.04-arm'
+        default: 'ubuntu-24.04-arm'
         options:
-          - ubuntu-22.04-arm
           - ubuntu-24.04-arm
+          - ubuntu-22.04-arm
+      port_bruno_zink_patch:
+        description: 'Try to apply Bruno zink-22.2.5 diff onto new Mesa (experimental, hunks may fail)'
+        required: true
+        type: boolean
+        default: false
+
+env:
+  PFX: /data/data/com.winlator/files/rootfs/usr
 
 jobs:
   build:
-    name: Build ${{ matrix.name }}
+    name: ${{ matrix.name }}
     runs-on: ${{ inputs.runner }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
       matrix:
         include:
-          - name: zink
+          # Exactly Bruno's Zink flags (xlib GLX, no DRI3)
+          - name: zink-xlib
+            pkg: zink
             drivers: zink
-          - name: opengl
+            glx: xlib
+            dri3: disabled
+          # Same, but DRI GLX + DRI3 (kopper path) - test if xlib variant misbehaves
+          - name: zink-dri
+            pkg: zink-dri
+            drivers: zink
+            glx: dri
+            dri3: enabled
+          # Direct OpenGL on Adreno via KGSL (Bruno has no recipe: experimental)
+          - name: opengl-kgsl
+            pkg: opengl
             drivers: freedreno
+            glx: dri
+            dri3: enabled
 
     env:
       MESA_REF: ${{ inputs.mesa_ref }}
       NAME: ${{ matrix.name }}
+      PKG: ${{ matrix.pkg }}
       DRIVERS: ${{ matrix.drivers }}
+      GLX: ${{ matrix.glx }}
+      DRI3: ${{ matrix.dri3 }}
       DEBIAN_FRONTEND: noninteractive
 
     steps:
@@ -41,7 +71,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y --no-install-recommends \
-            build-essential git pkg-config bison flex zstd zip \
+            build-essential git pkg-config bison flex zstd zip patch \
             python3 python3-venv python3-pip \
             libdrm-dev libexpat1-dev zlib1g-dev \
             libx11-dev libx11-xcb-dev libxext-dev libxfixes-dev \
@@ -66,12 +96,52 @@ jobs:
           git clone --depth 1 --branch "$MESA_REF" \
             https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
 
+      - name: Make Bruno zink diff (22.2.5 vs his tree)
+        if: startsWith(matrix.name, 'zink')
+        run: |
+          git clone --depth 1 --filter=blob:none --sparse \
+            https://github.com/brunodev85/mesa3d-custom.git bruno
+          git -C bruno sparse-checkout set zink-22.2.5
+          git clone --depth 1 --branch mesa-22.2.5 \
+            https://gitlab.freedesktop.org/mesa/mesa.git mesa-orig
+          mkdir -p out
+          cd bruno/zink-22.2.5
+          : > "$GITHUB_WORKSPACE/out/bruno-zink-22.2.5.patch"
+          find . -type f -not -path './.git/*' | sort | while read -r f; do
+            f="${f#./}"; o="$GITHUB_WORKSPACE/mesa-orig/$f"
+            if [ -f "$o" ]; then
+              cmp -s "$o" "$f" || diff -u --label "a/$f" --label "b/$f" "$o" "$f" || true
+            else
+              diff -uN --label "a/$f" --label "b/$f" /dev/null "$f" || true
+            fi
+          done >> "$GITHUB_WORKSPACE/out/bruno-zink-22.2.5.patch"
+          cd "$GITHUB_WORKSPACE"
+          echo "Changed files in Bruno's Zink tree:"
+          grep '^+++ ' out/bruno-zink-22.2.5.patch | sed 's/\t.*//' | tee changed.txt
+          echo "### Bruno zink diff: $(wc -l < changed.txt) files changed" >> "$GITHUB_STEP_SUMMARY"
+          echo '```' >> "$GITHUB_STEP_SUMMARY"; head -50 changed.txt >> "$GITHUB_STEP_SUMMARY"; echo '```' >> "$GITHUB_STEP_SUMMARY"
+          cd mesa-src
+          if patch -p1 --dry-run -s < ../out/bruno-zink-22.2.5.patch >/tmp/dry.txt 2>&1; then
+            echo "Bruno diff applies cleanly on $MESA_REF" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::warning::Bruno 22.2.5 diff does NOT apply cleanly on $MESA_REF (expected, 4 years of drift)"
+            head -40 /tmp/dry.txt
+            echo "Bruno diff does NOT apply cleanly on $MESA_REF (see artifact, port by hand)" >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Apply Bruno diff (only if requested)
+        if: startsWith(matrix.name, 'zink') && inputs.port_bruno_zink_patch
+        continue-on-error: true
+        working-directory: mesa-src
+        run: |
+          patch -p1 --forward --no-backup-if-mismatch < ../out/bruno-zink-22.2.5.patch || true
+          echo "Rejected hunks:"; find . -name '*.rej' | tee /tmp/rej.txt
+          [ ! -s /tmp/rej.txt ] || echo "::warning::Some hunks were rejected; result may not compile"
+
       - name: Configure
         working-directory: mesa-src
         run: |
           meson --version
-          # Collect the option names this Mesa version really has, so renamed or
-          # removed options (gles1, dri3, freedreno-kgsl ...) never break configure.
           F=$(ls meson.options meson_options.txt 2>/dev/null | head -n1)
           python3 - "$F" > /tmp/opts.txt <<'PY'
           import re, sys
@@ -82,34 +152,39 @@ jobs:
             if grep -qx -- "$1" /tmp/opts.txt; then ARGS+=("-D$1=$2")
             else echo "::notice::option '$1' not in this Mesa, skipped"; fi
           }
+          GLXVAL="$GLX"
+          if [ "$GLX" = "xlib" ] && ! grep -q "'xlib'" "$F" && grep -q "gallium-xlib" "$F"; then
+            GLXVAL="gallium-xlib"; echo "::notice::glx=xlib renamed to gallium-xlib in this Mesa"
+          fi
           add platforms x11
           add gallium-drivers "$DRIVERS"
           add vulkan-drivers ""
+          add dri-drivers ""
           add llvm disabled
           add gallium-va disabled
-          add gallium-vdpau disabled
-          add gallium-xa disabled
-          add video-codecs ""
-          add shared-glapi enabled
-          add glx dri
-          add egl enabled
-          add gbm enabled
-          add gles1 disabled
-          add gles2 enabled
-          add dri3 enabled
           add lmsensors disabled
           add libunwind disabled
           add valgrind disabled
-          add zstd disabled
-          if [ "$NAME" = "opengl" ]; then
+          add glx "$GLXVAL"
+          add dri3 "$DRI3"
+          if [ "$NAME" = "opengl-kgsl" ]; then
             add freedreno-kmds kgsl
             add freedreno-kgsl true
           fi
           echo "Options: ${ARGS[*]}"
-          meson setup build \
-            --buildtype=release -Dstrip=true \
-            -Dprefix=/usr -Dlibdir=lib \
-            "${ARGS[@]}"
+          setup() {
+            meson setup build --buildtype=release -Dstrip=true \
+              -Dprefix="$PFX" -Dlibdir=lib "$@"
+          }
+          if ! setup "${ARGS[@]}"; then
+            echo "::warning::configure failed, last meson log:"; tail -40 build/meson-logs/meson-log.txt || true
+            if [ "$GLX" = "xlib" ]; then
+              echo "::warning::retrying xlib variant with swrast+zink"
+              rm -rf build
+              ARGS=("${ARGS[@]/-Dgallium-drivers=zink/-Dgallium-drivers=swrast,zink}")
+              setup "${ARGS[@]}"
+            else exit 1; fi
+          fi
 
       - name: Build
         working-directory: mesa-src
@@ -119,41 +194,43 @@ jobs:
         run: |
           rm -rf stage
           DESTDIR="$PWD/stage" ninja -C mesa-src/build install
-          rm -rf stage/usr/include stage/usr/lib/pkgconfig
+          ROOT="stage${PFX%/usr}"
+          rm -rf "$ROOT/usr/include" "$ROOT/usr/lib/pkgconfig"
           echo "===== Installed files ====="
-          find stage \( -type f -o -type l \) | sort
+          find "$ROOT" \( -type f -o -type l \) | sort
 
       - name: Package
         run: |
           VER="${MESA_REF#mesa-}"
+          ROOT="stage${PFX%/usr}"
           mkdir -p out
-          # 1) rootfs package (extracted into rootfs/, gives usr/lib/...)
-          tar --owner=0 --group=0 --numeric-owner -C stage -cf - . \
-            | zstd -19 -T0 -o "out/${NAME}-${VER}.tzst"
-          # 2) folder for NATIVE_MESA_SRC (needs lib/ and dri/; symlinks resolved)
+          # rootfs package: extracts to usr/lib/... inside rootfs (drop into assets/graphics_driver)
+          tar --owner=0 --group=0 --numeric-owner -C "$ROOT" -cf - usr \
+            | zstd -19 -T0 -o "out/${PKG}-${VER}.tzst"
+          # NATIVE_MESA_SRC folder (lib/ + dri/)
           rm -rf native && mkdir -p native
-          cp -aL stage/usr/lib native/lib
-          cp -aL stage/usr/lib/dri native/dri
-          [ -d stage/usr/share ] && cp -a stage/usr/share native/share || true
+          cp -aL "$ROOT/usr/lib" native/lib
+          [ -d "$ROOT/usr/lib/dri" ] && cp -aL "$ROOT/usr/lib/dri" native/dri || true
           (cd native && zip -qr "../out/mesa-native-${NAME}-${VER}.zip" .)
           ls -lh out
 
       - name: Dependency report
         run: |
+          ROOT="stage${PFX%/usr}"
           {
             echo "## ${NAME} (${MESA_REF})"
             echo '```'
-            for f in $(find stage -type f -name '*.so*'); do
-              echo "--- $f"
+            for f in $(find "$ROOT" -type f -name '*.so*'); do
+              echo "--- ${f#$ROOT}"
               readelf -d "$f" | grep NEEDED || true
               objdump -T "$f" 2>/dev/null | grep -o 'GLIBC_[0-9.]*' | sort -uV | tail -n1 || true
             done
             echo '```'
-          } | tee -a "$GITHUB_STEP_SUMMARY" > out/deps-${NAME}.txt
+          } | tee -a "$GITHUB_STEP_SUMMARY" > "out/deps-${NAME}.txt"
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.name }}-package
+          name: ${{ matrix.name }}
           path: out/*
           if-no-files-found: error
