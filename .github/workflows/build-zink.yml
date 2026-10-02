@@ -120,10 +120,8 @@ jobs:
           cat > /tmp/port_zink_sw.py <<'PYEOF'
           #!/usr/bin/env python3
           """Port Bruno's (Winlator) Zink software-winsys presentation to a new Mesa tree.
-          Run from the Mesa source root. Idea from Bruno's zink-22.2.5 diff:
-            - zink_screen/zink_resource keep a sw_winsys + displaytarget
-            - zink_flush_frontbuffer: read rendered image -> displaytarget -> displaytarget_display (XPutImage)
-            - ZINK_CONTEXT_THREADED env decides threaded context (default OFF)
+          Run from the Mesa source root. Only zink_screen.c / zink_context.c are touched
+          (winsys + displaytarget are kept in file-scope statics, so no header edits needed).
           """
           import re, sys, pathlib
 
@@ -135,7 +133,6 @@ jobs:
           Z   = "src/gallium/drivers/zink/"
           SCR = Z + "zink_screen.c"
           SCH = Z + "zink_screen.h"
-          RSH = Z + "zink_resource.h"
           CTX = Z + "zink_context.c"
           SWH = "src/gallium/include/frontend/sw_winsys.h"
           if not pathlib.Path(SWH).exists():
@@ -151,7 +148,6 @@ jobs:
           def count_params(proto):
               return len([p for p in proto.split(",") if p.strip()])
 
-          # ---------------- sw_winsys.h prototypes ----------------
           sw = rd(SWH)
           m = re.search(r"\(\s*\*\s*displaytarget_display\s*\)\s*\(([^;]*?)\)\s*;", sw, re.S)
           if not m: die("displaytarget_display prototype not found in " + SWH)
@@ -159,37 +155,14 @@ jobs:
           m = re.search(r"\(\s*\*\s*displaytarget_create\s*\)\s*\(([^;]*?)\)\s*;", sw, re.S)
           if not m: die("displaytarget_create prototype not found in " + SWH)
           n_create = count_params(m.group(1))
-          print("displaytarget_display params:", n_disp, " displaytarget_create params:", n_create)
+          has_destroy = bool(re.search(r"\(\s*\*\s*displaytarget_destroy\s*\)", sw))
+          print("displaytarget_display params:", n_disp, " displaytarget_create params:", n_create, " destroy:", has_destroy)
           if n_create != 8:
               print("::warning::displaytarget_create has %d params (expected 8), check generated call" % n_create)
 
-          # ---------------- zink_screen.h: winsys member ----------------
-          h = rd(SCH)
-          if re.search(r"struct\s+sw_winsys\s*\*\s*winsys\s*;", h):
-              print("zink_screen.h: winsys member already present")
-          else:
-              mm = re.search(r"(struct\s+pipe_screen\s+base\s*;)", h)
-              if not mm: die("zink_screen.h: 'struct pipe_screen base;' not found")
-              h = h[:mm.end()] + "\n   struct sw_winsys *winsys;" + h[mm.end():]
-              inc = re.search(r"^#include", h, re.M)
-              h = h[:inc.start()] + "struct sw_winsys;\n" + h[inc.start():]
-              wr(SCH, h); print("zink_screen.h: winsys member added")
           has_copy_ctx = bool(re.search(r"\bcopy_context\b", rd(SCH)))
           print("screen->copy_context exists:", has_copy_ctx)
 
-          # ---------------- zink_resource.h: dt member ----------------
-          r = rd(RSH)
-          if re.search(r"struct\s+sw_displaytarget\s*\*\s*dt\s*;", r):
-              print("zink_resource.h: dt already present")
-          else:
-              mm = re.search(r"^\s*unsigned\s+dt_stride\s*;", r, re.M) or re.search(r"^\s*bool\s+swapchain\s*;", r, re.M)
-              if not mm: die("zink_resource.h: neither dt_stride nor swapchain member found")
-              r = r[:mm.start()] + "   struct sw_displaytarget *dt;\n" + r[mm.start():]
-              inc = re.search(r"^#include", r, re.M)
-              r = r[:inc.start()] + "struct sw_displaytarget;\n" + r[inc.start():]
-              wr(RSH, r); print("zink_resource.h: dt member added")
-
-          # ---------------- zink_screen.c ----------------
           t = rd(SCR)
           if "zink_sw_present_ported" in t:
               print("zink_screen.c already patched"); sys.exit(0)
@@ -210,21 +183,46 @@ jobs:
               disp_args = "%s, %s" % (HANDLE, box)
 
           copy_ctx_expr = ("zs_fb->copy_context ? &zs_fb->copy_context->base : %s" % PCTX) if has_copy_ctx else PCTX
+          destroy_line = "ws_fb->displaytarget_destroy(ws_fb, e->dt);" if has_destroy else "/* no displaytarget_destroy */"
+
+          # ---- file-scope state, inserted before the function's return-type line ----
+          glob = """/* zink_sw_present_ported: Winlator xlib presentation (Bruno's approach) */
+          struct zink_sw_dt_entry {
+             struct pipe_resource *res;
+             struct sw_displaytarget *dt;
+             unsigned stride, w, h;
+          };
+          static struct sw_winsys *zink_sw_winsys_g;
+          static struct zink_sw_dt_entry zink_sw_dt_cache[32];
+
+          """
+          prev_line_start = t.rfind("\n", 0, mf.start() - 1) + 1
+          t = t[:prev_line_start] + glob + t[prev_line_start:]
+          mf = re.search(r"^zink_flush_frontbuffer\s*\(([^)]*)\)\s*\{", t, re.M)
 
           block = """
-             /* zink_sw_present_ported: Winlator xlib presentation (Bruno's approach) */
              {
-                struct zink_screen *zs_fb = zink_screen(%(PSCR)s);
-                struct zink_resource *zr_fb = zink_resource(%(PRES)s);
-                struct sw_winsys *ws_fb = zs_fb->winsys;
+                struct sw_winsys *ws_fb = zink_sw_winsys_g;
                 if (ws_fb) {
-                   if (!zr_fb->dt)
-                      zr_fb->dt = ws_fb->displaytarget_create(ws_fb, zr_fb->base.b.bind,
-                                                              zr_fb->base.b.format,
-                                                              %(PRES)s->width0, %(PRES)s->height0,
-                                                              64, NULL, &zr_fb->dt_stride);
-                   if (zr_fb->dt) {
-                      void *dt_map = ws_fb->displaytarget_map(ws_fb, zr_fb->dt, 0);
+                   struct zink_screen *zs_fb = zink_screen(%(PSCR)s);
+                   struct zink_sw_dt_entry *e = NULL, *freeslot = NULL;
+                   for (unsigned i = 0; i < 32; i++) {
+                      if (zink_sw_dt_cache[i].res == %(PRES)s) { e = &zink_sw_dt_cache[i]; break; }
+                      if (!zink_sw_dt_cache[i].res && !freeslot) freeslot = &zink_sw_dt_cache[i];
+                   }
+                   if (e && (e->w != %(PRES)s->width0 || e->h != %(PRES)s->height0)) {
+                      if (e->dt) %(DESTROY)s
+                      e->dt = NULL; e->res = NULL; freeslot = e; e = NULL;
+                   }
+                   if (!e) {
+                      e = freeslot ? freeslot : &zink_sw_dt_cache[0];
+                      e->res = %(PRES)s; e->w = %(PRES)s->width0; e->h = %(PRES)s->height0;
+                      e->dt = ws_fb->displaytarget_create(ws_fb, %(PRES)s->bind, %(PRES)s->format,
+                                                          %(PRES)s->width0, %(PRES)s->height0,
+                                                          64, NULL, &e->stride);
+                   }
+                   if (e->dt) {
+                      void *dt_map = ws_fb->displaytarget_map(ws_fb, e->dt, 0);
                       if (dt_map) {
                          struct pipe_context *cctx = %(CCTX)s;
                          struct pipe_transfer *transfer = NULL;
@@ -233,37 +231,32 @@ jobs:
                                                           u_minify(%(PRES)s->height0, %(LEVEL)s),
                                                           &transfer);
                          if (res_map) {
-                            util_copy_rect((uint8_t *)dt_map, %(PRES)s->format, zr_fb->dt_stride, 0, 0,
+                            util_copy_rect((uint8_t *)dt_map, %(PRES)s->format, e->stride, 0, 0,
                                            transfer->box.width, transfer->box.height,
                                            (const uint8_t *)res_map, transfer->stride, 0, 0);
                             pipe_texture_unmap(cctx, transfer);
                          }
-                         ws_fb->displaytarget_unmap(ws_fb, zr_fb->dt);
+                         ws_fb->displaytarget_unmap(ws_fb, e->dt);
                       }
-                      ws_fb->displaytarget_display(ws_fb, zr_fb->dt, %(DISP)s);
+                      ws_fb->displaytarget_display(ws_fb, e->dt, %(DISP)s);
                       return;
                    }
                 }
              }
-          """ % dict(PSCR=PSCR, PRES=PRES, LEVEL=LEVEL, LAYER=LAYER, CCTX=copy_ctx_expr, DISP=disp_args)
+          """ % dict(PSCR=PSCR, PRES=PRES, LEVEL=LEVEL, LAYER=LAYER, CCTX=copy_ctx_expr, DISP=disp_args, DESTROY=destroy_line)
           t = t[:mf.end()] + block + t[mf.end():]
 
-          # screen->winsys in zink_create_screen
-          mc = re.search(r"^zink_create_screen\s*\(\s*struct\s+sw_winsys\s*\*\s*(\w+)", t, re.M)
-          if not mc: die("zink_create_screen(struct sw_winsys *...) not found")
-          wname = mc.group(1)
-          end = t.find("\n}\n", mc.end())
-          body = t[mc.end():end]
-          ms = re.search(r"struct\s+zink_screen\s*\*\s*ret\s*=[^;]*;", body)
-          if not ms: die("'struct zink_screen *ret = ...;' not found in zink_create_screen")
-          ins = mc.end() + ms.end()
-          t = t[:ins] + "\n   if (ret)\n      ret->winsys = %s;" % wname + t[ins:]
+          # remember winsys at zink_create_screen entry
+          mc = re.search(r"^zink_create_screen\s*\(([^)]*)\)\s*\{", t, re.M)
+          if not mc: die("zink_create_screen not found")
+          Pc = params_of(mc.group(1))
+          if not Pc: die("zink_create_screen has no params")
+          t = t[:mc.end()] + "\n   zink_sw_winsys_g = %s;\n" % Pc[0] + t[mc.end():]
 
-          # includes
           inc = re.search(r'^#include\s+"', t, re.M)
           t = (t[:inc.start()] + '#include "frontend/sw_winsys.h"\n#include "util/u_inlines.h"\n'
                '#include "util/u_math.h"\n#include "util/format/u_format.h"\n' + t[inc.start():])
-          wr(SCR, t); print("zink_screen.c patched")
+          wr(SCR, t); print("zink_screen.c patched (winsys param = %s)" % Pc[0])
 
           # ---------------- zink_context.c: ZINK_CONTEXT_THREADED ----------------
           c = rd(CTX)
@@ -389,3 +382,4 @@ jobs:
           name: zink-xlib
           path: out/*
           if-no-files-found: error
+          
