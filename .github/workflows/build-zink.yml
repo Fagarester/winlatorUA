@@ -96,6 +96,19 @@ jobs:
           else
             echo "::error::cannot find driver_swrast in $M, need manual patch (see log above)"; exit 1
           fi
+          # Zink needs Mesa's xmlconfig (driParseConfigFiles/driQueryOptionb); xlib target does not link it.
+          U=src/util/meson.build
+          echo "===== xmlconfig in $U ====="; grep -n "xmlconfig" "$U" || true
+          if grep -q "idep_xmlconfig[^_a-z]" "$M"; then
+            echo "xmlconfig already linked"
+          elif grep -q "^idep_xmlconfig *=" "$U"; then
+            sed -i '0,/driver_zink/s//driver_zink, idep_xmlconfig/' "$M"; echo "linked idep_xmlconfig"
+          elif grep -q "^libxmlconfig *=" "$U"; then
+            sed -i '0,/driver_zink/s//driver_zink, declare_dependency(link_with : libxmlconfig)/' "$M"; echo "linked libxmlconfig"
+          else
+            echo "::error::no xmlconfig target found in $U (see list above)"; exit 1
+          fi
+          echo "===== final diff ====="; git diff -- "$M"
 
       - name: Configure
         working-directory: mesa-src
