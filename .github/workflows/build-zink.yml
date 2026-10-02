@@ -68,7 +68,26 @@ jobs:
           M=src/gallium/targets/libgl-xlib/meson.build
           echo "===== original $M ====="; cat "$M"
           echo "===== where zink is mentioned in xlib/sw code ====="
-          grep -rn -i "zink" src/gallium/targets/libgl-xlib src/gallium/auxiliary/target-helpers/sw_helper.h || true
+          grep -rn -i "zink" src/gallium/targets/libgl-xlib src/gallium/auxiliary/target-helpers/inline_sw_helper.h || true
+          # xlib.c includes inline_sw_helper.h which calls zink_create_screen(), but never
+          # includes the zink header -> "implicit declaration". Declare it before the include.
+          X=src/gallium/targets/libgl-xlib/xlib.c
+          python3 - "$X" <<'PY'
+          import sys, re
+          p = sys.argv[1]
+          t = open(p).read()
+          decl = ("#ifdef GALLIUM_ZINK\n"
+                  "struct sw_winsys;\nstruct pipe_screen_config;\nstruct pipe_screen;\n"
+                  "struct pipe_screen *zink_create_screen(struct sw_winsys *winsys, const struct pipe_screen_config *config);\n"
+                  "#endif\n")
+          m = re.search(r'^#include\s+[<"][^>"]*inline_sw_helper\.h[>"].*$', t, re.M)
+          if not m:
+              sys.exit("inline_sw_helper.h include not found in xlib.c")
+          t = t[:m.start()] + decl + t[m.start():]
+          open(p, "w").write(t)
+          print("declaration inserted into", p)
+          PY
+          git diff -- "$X"
           if grep -q "driver_zink" "$M"; then
             echo "driver_zink already linked into libgl-xlib"
           elif grep -q "driver_swrast" "$M"; then
