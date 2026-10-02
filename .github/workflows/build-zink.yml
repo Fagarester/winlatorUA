@@ -110,6 +110,188 @@ jobs:
           fi
           echo "===== final diff ====="; git diff -- "$M"
 
+      - name: Port Bruno sw-winsys presentation to Zink (fixes black screen)
+        working-directory: mesa-src
+        run: |
+          echo "===== current zink_flush_frontbuffer in this Mesa ====="
+          awk '/^zink_flush_frontbuffer/,/^}/' src/gallium/drivers/zink/zink_screen.c | head -80
+          echo "===== sw_winsys.h ====="
+          grep -rn -A4 "displaytarget_display\|displaytarget_create" src/gallium/include/frontend/sw_winsys.h src/gallium/frontends/sw_winsys.h 2>/dev/null || true
+          cat > /tmp/port_zink_sw.py <<'PYEOF'
+          #!/usr/bin/env python3
+          """Port Bruno's (Winlator) Zink software-winsys presentation to a new Mesa tree.
+          Run from the Mesa source root. Idea from Bruno's zink-22.2.5 diff:
+            - zink_screen/zink_resource keep a sw_winsys + displaytarget
+            - zink_flush_frontbuffer: read rendered image -> displaytarget -> displaytarget_display (XPutImage)
+            - ZINK_CONTEXT_THREADED env decides threaded context (default OFF)
+          """
+          import re, sys, pathlib
+
+          def rd(p): return pathlib.Path(p).read_text()
+          def wr(p, t): pathlib.Path(p).write_text(t)
+          def die(msg):
+              print("::error::" + msg); sys.exit(1)
+
+          Z   = "src/gallium/drivers/zink/"
+          SCR = Z + "zink_screen.c"
+          SCH = Z + "zink_screen.h"
+          RSH = Z + "zink_resource.h"
+          CTX = Z + "zink_context.c"
+          SWH = "src/gallium/include/frontend/sw_winsys.h"
+          if not pathlib.Path(SWH).exists():
+              SWH = "src/gallium/frontends/sw_winsys.h"
+
+          def params_of(sig):
+              out = []
+              for p in sig.split(","):
+                  ids = re.findall(r"[A-Za-z_]\w*", p)
+                  if ids: out.append(ids[-1])
+              return out
+
+          def count_params(proto):
+              return len([p for p in proto.split(",") if p.strip()])
+
+          # ---------------- sw_winsys.h prototypes ----------------
+          sw = rd(SWH)
+          m = re.search(r"\(\s*\*\s*displaytarget_display\s*\)\s*\(([^;]*?)\)\s*;", sw, re.S)
+          if not m: die("displaytarget_display prototype not found in " + SWH)
+          n_disp = count_params(m.group(1))
+          m = re.search(r"\(\s*\*\s*displaytarget_create\s*\)\s*\(([^;]*?)\)\s*;", sw, re.S)
+          if not m: die("displaytarget_create prototype not found in " + SWH)
+          n_create = count_params(m.group(1))
+          print("displaytarget_display params:", n_disp, " displaytarget_create params:", n_create)
+          if n_create != 8:
+              print("::warning::displaytarget_create has %d params (expected 8), check generated call" % n_create)
+
+          # ---------------- zink_screen.h: winsys member ----------------
+          h = rd(SCH)
+          if re.search(r"struct\s+sw_winsys\s*\*\s*winsys\s*;", h):
+              print("zink_screen.h: winsys member already present")
+          else:
+              mm = re.search(r"(struct\s+pipe_screen\s+base\s*;)", h)
+              if not mm: die("zink_screen.h: 'struct pipe_screen base;' not found")
+              h = h[:mm.end()] + "\n   struct sw_winsys *winsys;" + h[mm.end():]
+              inc = re.search(r"^#include", h, re.M)
+              h = h[:inc.start()] + "struct sw_winsys;\n" + h[inc.start():]
+              wr(SCH, h); print("zink_screen.h: winsys member added")
+          has_copy_ctx = bool(re.search(r"\bcopy_context\b", rd(SCH)))
+          print("screen->copy_context exists:", has_copy_ctx)
+
+          # ---------------- zink_resource.h: dt member ----------------
+          r = rd(RSH)
+          if re.search(r"struct\s+sw_displaytarget\s*\*\s*dt\s*;", r):
+              print("zink_resource.h: dt already present")
+          else:
+              mm = re.search(r"^\s*unsigned\s+dt_stride\s*;", r, re.M) or re.search(r"^\s*bool\s+swapchain\s*;", r, re.M)
+              if not mm: die("zink_resource.h: neither dt_stride nor swapchain member found")
+              r = r[:mm.start()] + "   struct sw_displaytarget *dt;\n" + r[mm.start():]
+              inc = re.search(r"^#include", r, re.M)
+              r = r[:inc.start()] + "struct sw_displaytarget;\n" + r[inc.start():]
+              wr(RSH, r); print("zink_resource.h: dt member added")
+
+          # ---------------- zink_screen.c ----------------
+          t = rd(SCR)
+          if "zink_sw_present_ported" in t:
+              print("zink_screen.c already patched"); sys.exit(0)
+
+          mf = re.search(r"^zink_flush_frontbuffer\s*\(([^)]*)\)\s*\{", t, re.M)
+          if not mf: die("zink_flush_frontbuffer not found in zink_screen.c")
+          P = params_of(mf.group(1))
+          print("zink_flush_frontbuffer params:", P)
+          if len(P) < 6: die("unexpected zink_flush_frontbuffer signature: %s" % P)
+          PSCR, PCTX, PRES, LEVEL, LAYER, HANDLE = P[:6]
+          extra = P[6:]
+          if n_disp >= 5:
+              nboxes = extra[0] if len(extra) >= 2 else "0"
+              box = extra[-1] if extra else "NULL"
+              disp_args = "%s, %s, %s" % (HANDLE, nboxes, box)
+          else:
+              box = extra[-1] if extra else "NULL"
+              disp_args = "%s, %s" % (HANDLE, box)
+
+          copy_ctx_expr = ("zs_fb->copy_context ? &zs_fb->copy_context->base : %s" % PCTX) if has_copy_ctx else PCTX
+
+          block = """
+             /* zink_sw_present_ported: Winlator xlib presentation (Bruno's approach) */
+             {
+                struct zink_screen *zs_fb = zink_screen(%(PSCR)s);
+                struct zink_resource *zr_fb = zink_resource(%(PRES)s);
+                struct sw_winsys *ws_fb = zs_fb->winsys;
+                if (ws_fb) {
+                   if (!zr_fb->dt)
+                      zr_fb->dt = ws_fb->displaytarget_create(ws_fb, zr_fb->base.b.bind,
+                                                              zr_fb->base.b.format,
+                                                              %(PRES)s->width0, %(PRES)s->height0,
+                                                              64, NULL, &zr_fb->dt_stride);
+                   if (zr_fb->dt) {
+                      void *dt_map = ws_fb->displaytarget_map(ws_fb, zr_fb->dt, 0);
+                      if (dt_map) {
+                         struct pipe_context *cctx = %(CCTX)s;
+                         struct pipe_transfer *transfer = NULL;
+                         void *res_map = pipe_texture_map(cctx, %(PRES)s, %(LEVEL)s, %(LAYER)s, PIPE_MAP_READ, 0, 0,
+                                                          u_minify(%(PRES)s->width0, %(LEVEL)s),
+                                                          u_minify(%(PRES)s->height0, %(LEVEL)s),
+                                                          &transfer);
+                         if (res_map) {
+                            util_copy_rect((uint8_t *)dt_map, %(PRES)s->format, zr_fb->dt_stride, 0, 0,
+                                           transfer->box.width, transfer->box.height,
+                                           (const uint8_t *)res_map, transfer->stride, 0, 0);
+                            pipe_texture_unmap(cctx, transfer);
+                         }
+                         ws_fb->displaytarget_unmap(ws_fb, zr_fb->dt);
+                      }
+                      ws_fb->displaytarget_display(ws_fb, zr_fb->dt, %(DISP)s);
+                      return;
+                   }
+                }
+             }
+          """ % dict(PSCR=PSCR, PRES=PRES, LEVEL=LEVEL, LAYER=LAYER, CCTX=copy_ctx_expr, DISP=disp_args)
+          t = t[:mf.end()] + block + t[mf.end():]
+
+          # screen->winsys in zink_create_screen
+          mc = re.search(r"^zink_create_screen\s*\(\s*struct\s+sw_winsys\s*\*\s*(\w+)", t, re.M)
+          if not mc: die("zink_create_screen(struct sw_winsys *...) not found")
+          wname = mc.group(1)
+          end = t.find("\n}\n", mc.end())
+          body = t[mc.end():end]
+          ms = re.search(r"struct\s+zink_screen\s*\*\s*ret\s*=[^;]*;", body)
+          if not ms: die("'struct zink_screen *ret = ...;' not found in zink_create_screen")
+          ins = mc.end() + ms.end()
+          t = t[:ins] + "\n   if (ret)\n      ret->winsys = %s;" % wname + t[ins:]
+
+          # includes
+          inc = re.search(r'^#include\s+"', t, re.M)
+          t = (t[:inc.start()] + '#include "frontend/sw_winsys.h"\n#include "util/u_inlines.h"\n'
+               '#include "util/u_math.h"\n#include "util/format/u_format.h"\n' + t[inc.start():])
+          wr(SCR, t); print("zink_screen.c patched")
+
+          # ---------------- zink_context.c: ZINK_CONTEXT_THREADED ----------------
+          c = rd(CTX)
+          if "ZINK_CONTEXT_THREADED" in c:
+              print("zink_context.c already has ZINK_CONTEXT_THREADED")
+          else:
+              mx = re.search(r"^zink_context_create\s*\(\s*struct\s+pipe_screen\s*\*\s*\w+\s*,\s*void\s*\*\s*\w+\s*,\s*unsigned\s+(\w+)\s*\)\s*\{", c, re.M)
+              if not mx:
+                  print("::warning::zink_context_create not found, ZINK_CONTEXT_THREADED not ported")
+              else:
+                  fl = mx.group(1)
+                  add = """
+             {
+                const char *zink_ctx_thr = getenv("ZINK_CONTEXT_THREADED");
+                %(f)s &= ~PIPE_CONTEXT_PREFER_THREADED;
+                if (zink_ctx_thr && (!strcmp(zink_ctx_thr, "true") || !strcmp(zink_ctx_thr, "1")))
+                   %(f)s |= PIPE_CONTEXT_PREFER_THREADED;
+             }
+          """ % dict(f=fl)
+                  c = c[:mx.end()] + add + c[mx.end():]
+                  inc = re.search(r'^#include\s+"', c, re.M)
+                  c = c[:inc.start()] + "#include <stdlib.h>\n#include <string.h>\n" + c[inc.start():]
+                  wr(CTX, c); print("zink_context.c: ZINK_CONTEXT_THREADED ported (default OFF)")
+          print("DONE")
+          PYEOF
+          python3 /tmp/port_zink_sw.py
+          echo "===== diff stat ====="; git diff --stat
+
       - name: Configure
         working-directory: mesa-src
         run: |
