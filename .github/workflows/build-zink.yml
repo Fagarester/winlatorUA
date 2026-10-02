@@ -186,7 +186,14 @@ jobs:
           destroy_line = "ws_fb->displaytarget_destroy(ws_fb, e->dt);" if has_destroy else "/* no displaytarget_destroy */"
 
           # ---- file-scope state, inserted before the function's return-type line ----
-          glob = """/* zink_sw_present_ported: Winlator xlib presentation (Bruno's approach) */
+          glob = """#include <stdbool.h>
+          #include <stdint.h>
+          #include "frontend/sw_winsys.h"
+          #include "util/u_inlines.h"
+          #include "util/u_math.h"
+          #include "util/format/u_format.h"
+
+          /* zink_sw_present_ported: Winlator xlib presentation (Bruno's approach) */
           struct zink_sw_dt_entry {
              struct pipe_resource *res;
              struct sw_displaytarget *dt;
@@ -253,9 +260,6 @@ jobs:
           if not Pc: die("zink_create_screen has no params")
           t = t[:mc.end()] + "\n   zink_sw_winsys_g = %s;\n" % Pc[0] + t[mc.end():]
 
-          inc = re.search(r'^#include\s+"', t, re.M)
-          t = (t[:inc.start()] + '#include "frontend/sw_winsys.h"\n#include "util/u_inlines.h"\n'
-               '#include "util/u_math.h"\n#include "util/format/u_format.h"\n' + t[inc.start():])
           wr(SCR, t); print("zink_screen.c patched (winsys param = %s)" % Pc[0])
 
           # ---------------- zink_context.c: ZINK_CONTEXT_THREADED ----------------
@@ -277,8 +281,7 @@ jobs:
              }
           """ % dict(f=fl)
                   c = c[:mx.end()] + add + c[mx.end():]
-                  inc = re.search(r'^#include\s+"', c, re.M)
-                  c = c[:inc.start()] + "#include <stdlib.h>\n#include <string.h>\n" + c[inc.start():]
+                  c = "#include <stdlib.h>\n#include <string.h>\n" + c
                   wr(CTX, c); print("zink_context.c: ZINK_CONTEXT_THREADED ported (default OFF)")
           print("DONE")
           PYEOF
@@ -323,6 +326,21 @@ jobs:
       - name: Build
         working-directory: mesa-src
         run: ninja -C build -j"$(nproc)"
+
+      - name: Diagnose sw_winsys / zink_screen.c errors (only on failure)
+        if: failure()
+        working-directory: mesa-src
+        run: |
+          echo "===== every definition of struct sw_winsys ====="
+          grep -rn -E "^struct sw_winsys[[:space:]]*\{|^struct sw_winsys$" src --include=*.h --include=*.c || true
+          echo "===== sw_winsys.h lines 40-160 ====="
+          sed -n 40,160p src/gallium/include/frontend/sw_winsys.h || true
+          echo "===== where zink_screen.c gets sw_winsys ====="
+          grep -n "sw_winsys" src/gallium/drivers/zink/zink_screen.c | head -40
+          echo "===== errors of zink_screen.c only ====="
+          ninja -C build src/gallium/drivers/zink/libzink.a.p/zink_screen.c.o 2>&1 | grep -E "error|note:" | head -40 || true
+          echo "===== our inserted block (as compiled) ====="
+          grep -n "zink_sw_winsys_g\|ws_fb->" src/gallium/drivers/zink/zink_screen.c | head -30
 
       - name: Install to stage and keep only libGL
         run: |
