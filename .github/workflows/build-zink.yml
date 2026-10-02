@@ -62,6 +62,22 @@ jobs:
           git clone --depth 1 --branch "$MESA_REF" \
             https://gitlab.freedesktop.org/mesa/mesa.git mesa-src
 
+      - name: Force Zink into xlib libGL (what Grima04/Bruno patches do)
+        working-directory: mesa-src
+        run: |
+          M=src/gallium/targets/libgl-xlib/meson.build
+          echo "===== original $M ====="; cat "$M"
+          echo "===== where zink is mentioned in xlib/sw code ====="
+          grep -rn -i "zink" src/gallium/targets/libgl-xlib src/gallium/auxiliary/target-helpers/sw_helper.h || true
+          if grep -q "driver_zink" "$M"; then
+            echo "driver_zink already linked into libgl-xlib"
+          elif grep -q "driver_swrast" "$M"; then
+            sed -i '0,/driver_swrast/s//driver_swrast, driver_zink/' "$M"
+            echo "===== patched ====="; git diff -- "$M"
+          else
+            echo "::error::cannot find driver_swrast in $M, need manual patch (see log above)"; exit 1
+          fi
+
       - name: Configure
         working-directory: mesa-src
         run: |
@@ -118,8 +134,8 @@ jobs:
         run: |
           LIB="stage${PFX%/usr}/usr/lib"
           L=$(readlink -f "$LIB/libGL.so.1")
-          N=$(strings "$L" | grep -ci zink || true)
-          echo "zink strings in libGL: $N"
+          N=$(strings "$L" | grep -c "ZINK_DEBUG" || true)
+          echo "ZINK_DEBUG strings in libGL: $N"
           [ "$N" -gt 0 ] || { echo "::error::No Zink inside libGL (only software renderer)"; exit 1; }
 
       - name: Bundle X libs that libGL needs and rootfs may lack
