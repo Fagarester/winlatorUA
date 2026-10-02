@@ -182,7 +182,7 @@ jobs:
               box = extra[-1] if extra else "NULL"
               disp_args = "%s, %s" % (HANDLE, box)
 
-          copy_ctx_expr = ("zs_fb->copy_context ? &zs_fb->copy_context->base : %s" % PCTX) if has_copy_ctx else PCTX
+          copy_ctx_expr = "zink_sw_copy_ctx"
           destroy_line = "ws_fb->displaytarget_destroy(ws_fb, e->dt);" if has_destroy else "/* no displaytarget_destroy */"
 
           # ---- file-scope state, inserted before the function's return-type line ----
@@ -201,6 +201,7 @@ jobs:
           };
           static struct sw_winsys *zink_sw_winsys_g;
           static struct zink_sw_dt_entry zink_sw_dt_cache[32];
+          static struct pipe_context *zink_sw_copy_ctx;
 
           """
           prev_line_start = t.rfind("\n", 0, mf.start() - 1) + 1
@@ -211,7 +212,6 @@ jobs:
              {
                 struct sw_winsys *ws_fb = zink_sw_winsys_g;
                 if (ws_fb) {
-                   struct zink_screen *zs_fb = zink_screen(%(PSCR)s);
                    struct zink_sw_dt_entry *e = NULL, *freeslot = NULL;
                    for (unsigned i = 0; i < 32; i++) {
                       if (zink_sw_dt_cache[i].res == %(PRES)s) { e = &zink_sw_dt_cache[i]; break; }
@@ -228,8 +228,12 @@ jobs:
                                                           %(PRES)s->width0, %(PRES)s->height0,
                                                           64, NULL, &e->stride);
                    }
+                   if (!zink_sw_copy_ctx)
+                      zink_sw_copy_ctx = %(PSCR)s->context_create(%(PSCR)s, NULL, 0);
+                   if (!zink_sw_copy_ctx)
+                      zink_sw_copy_ctx = %(PCTX)s;
                    if (e->dt) {
-                      void *dt_map = ws_fb->displaytarget_map(ws_fb, e->dt, 0);
+                      void *dt_map = zink_sw_copy_ctx ? ws_fb->displaytarget_map(ws_fb, e->dt, 0) : NULL;
                       if (dt_map) {
                          struct pipe_context *cctx = %(CCTX)s;
                          struct pipe_transfer *transfer = NULL;
@@ -250,7 +254,7 @@ jobs:
                    }
                 }
              }
-          """ % dict(PSCR=PSCR, PRES=PRES, LEVEL=LEVEL, LAYER=LAYER, CCTX=copy_ctx_expr, DISP=disp_args, DESTROY=destroy_line)
+          """ % dict(PSCR=PSCR, PRES=PRES, LEVEL=LEVEL, LAYER=LAYER, CCTX=copy_ctx_expr, DISP=disp_args, DESTROY=destroy_line, PCTX=PCTX)
           t = t[:mf.end()] + block + t[mf.end():]
 
           # remember winsys at zink_create_screen entry
