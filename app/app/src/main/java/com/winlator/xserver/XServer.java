@@ -55,6 +55,7 @@ public class XServer {
         drawableManager = new DrawableManager(this);
         cursorManager = new CursorManager(drawableManager);
         windowManager = new WindowManager(screenInfo, drawableManager);
+        windowManager.setXServer(this);
         selectionManager = new SelectionManager(windowManager);
         inputDeviceManager = new InputDeviceManager(this);
         grabManager = new GrabManager(this);
@@ -206,4 +207,4 @@ public class XServer {
         DebugDialog debugDialog = activity.getDebugDialog();
         if (debugDialog != null) debugDialog.call("xserver:"+line);
     }
-                               }
+}
