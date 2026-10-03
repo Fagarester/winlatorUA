@@ -50,6 +50,8 @@ public abstract class WindowRequests {
         Visual visual = client.xServer.pixmapManager.getVisual(inputStream.readInt());
         Bitmask valueMask = new Bitmask(inputStream.readInt());
 
+        client.xServer.debugPrint("CreateWindow id=0x"+Integer.toHexString(windowId)+" parent=0x"+Integer.toHexString(parentId)+" pos=("+x+","+y+") size="+width+"x"+height+" screen="+client.xServer.screenInfo.width+"x"+client.xServer.screenInfo.height);
+
         Window window = client.xServer.windowManager.createWindow(windowId, parent, x, y, width, height, windowClass, visual, depth, client);
         window.setBorderWidth(borderWidth);
         if (!valueMask.isEmpty()) window.attributes.update(valueMask, inputStream, client);
