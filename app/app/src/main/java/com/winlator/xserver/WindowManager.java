@@ -46,7 +46,15 @@ public class WindowManager extends XResourceManager {
         default void onModifyWindowProperty(Window window, Property property) {}
     }
 
+    private final ScreenInfo screenInfo;
+    private XServer xServer;
+
+    public void setXServer(XServer xServer) {
+        this.xServer = xServer;
+    }
+
     public WindowManager(ScreenInfo screenInfo, DrawableManager drawableManager) {
+        this.screenInfo = screenInfo;
         this.drawableManager = drawableManager;
         int id = IDGenerator.generate();
         Drawable drawable = drawableManager.createDrawable(id, screenInfo.width, screenInfo.height, drawableManager.getVisual());
@@ -279,6 +287,8 @@ public class WindowManager extends XResourceManager {
 
         Window parent = window.getParent();
         boolean overrideRedirect = window.attributes.isOverrideRedirect();
+        if (xServer != null) xServer.debugPrint("ConfigureWindow id=0x"+Integer.toHexString(window.id)+" pos=("+x+","+y+") size="+width+"x"+height+" screen="+screenInfo.width+"x"+screenInfo.height);
+
         if (!parent.hasEventListenerFor(Event.SUBSTRUCTURE_REDIRECT) || overrideRedirect) {
             changeWindowGeometry(window, x, y, width, height);
 
