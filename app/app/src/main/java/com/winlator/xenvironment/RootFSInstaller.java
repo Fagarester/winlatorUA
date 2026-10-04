@@ -91,11 +91,15 @@ public abstract class RootFSInstaller {
     // It is created only once: if the user later deletes all containers, it is not recreated.
     public static void createDefaultContainerIfNeeded(final MainActivity activity) {
         final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
-        if (preferences.getBoolean("default_container_created", false)) return;
+        if (preferences.getBoolean("default_container_created", false)) {
+            activity.autoStartContainer();
+            return;
+        }
 
         final ContainerManager manager = new ContainerManager(activity);
         if (!manager.getContainers().isEmpty()) {
             preferences.edit().putBoolean("default_container_created", true).apply();
+            activity.autoStartContainer();
             return;
         }
 
@@ -106,7 +110,11 @@ public abstract class RootFSInstaller {
             data.put("envVars", Container.DEFAULT_ENV_VARS);
             data.put("graphicsDriver", GraphicsDrivers.getDefaultDriver(activity));
             manager.createContainerAsync(data, (container) -> {
-                if (container != null) preferences.edit().putBoolean("default_container_created", true).apply();
+                if (container != null) {
+                    preferences.edit().putBoolean("default_container_created", true).apply();
+                    activity.reloadContainersList(); // show the new container in the list right away
+                    activity.autoStartContainer();   // and start it
+                }
             });
         }
         catch (JSONException e) {}
