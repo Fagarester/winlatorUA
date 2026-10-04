@@ -168,6 +168,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             container = containerManager.getContainerById(getIntent().getIntExtra("container_id", 0));
             containerManager.activateContainer(container);
 
+            if (!checkNativeGame()) return;
+
             boolean wineprefixNeedsUpdate = container.getExtra("wineprefixNeedsUpdate").equals("t");
             if (wineprefixNeedsUpdate) {
                 preloaderDialog.show(R.string.updating_system_files);
@@ -303,11 +305,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         super.onWindowFocusChanged(hasFocus);
 
         if (hasFocus) {
-            // The system nav/status bars re-appear (leaving a black strip) whenever the window
-            // loses and regains focus (dialogs, OEM overlays, app switches); re-hide every time,
-            // not just once in onCreate.
-            AppUtils.hideSystemUI(this);
-
             if (capturePointerOnExternalMouse) touchpadView.requestPointerCapture();
 
             if (winHandler != null && clipboardManager != null && clipboardManager.hasPrimaryClip()) {
@@ -486,6 +483,36 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         }
 
         if (containerDataChanged) container.saveData();
+    }
+
+    // Native game containers (NATIVE_EXEC set): the game must be already copied into the rootfs
+    // or be present in NATIVE_SRC (phone storage). Otherwise show an error and close.
+    private boolean checkNativeGame() {
+        if (container == null) return true;
+        EnvVars containerVars = new EnvVars(container.getEnvVars());
+        String nativeExec = containerVars.get("NATIVE_EXEC");
+        if (nativeExec == null || nativeExec.isEmpty()) return true; // ordinary Wine container
+
+        String nativeSrc = containerVars.get("NATIVE_SRC");
+        boolean alreadyCopied = false;
+        if (nativeSrc != null && !nativeSrc.isEmpty()) {
+            File dstDir = new File(rootFS.getRootDir(), RootFS.HOME_PATH+"/"+(new File(nativeSrc)).getName());
+            alreadyCopied = (new File(dstDir, ".copy_done")).exists();
+        }
+        if (alreadyCopied) return true;
+
+        if (nativeSrc != null && !nativeSrc.isEmpty() && (new File(nativeSrc)).isDirectory()) {
+            android.widget.Toast.makeText(this, "Копирование игры, подождите...", android.widget.Toast.LENGTH_LONG).show();
+            return true;
+        }
+
+        new android.app.AlertDialog.Builder(this)
+            .setTitle("Игра не найдена")
+            .setMessage("Положите папку с игрой сюда и запустите снова:\n"+(nativeSrc != null ? nativeSrc : "(NATIVE_SRC не задан)"))
+            .setCancelable(false)
+            .setPositiveButton(android.R.string.ok, (dialog, which) -> finish())
+            .show();
+        return false;
     }
 
     private void setupXEnvironment() {
@@ -776,6 +803,9 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
                 envVars.put("GLADIO_NO_ERROR", "1");
 
                 if (changed || MainActivity.DEBUG_MODE) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/gladio-"+DefaultVersion.GLADIO+".tzst", rootDir);
+                break;
+            case GraphicsDrivers.OPENGL:
+                if (changed || MainActivity.DEBUG_MODE) TarCompressorUtils.extract(TarCompressorUtils.Type.ZSTD, this, "graphics_driver/opengl-"+DefaultVersion.OPENGL+".tzst", rootDir);
                 break;
         }
     }
