@@ -25,9 +25,12 @@ import androidx.fragment.app.FragmentManager;
 import androidx.preference.PreferenceManager;
 
 import com.google.android.material.navigation.NavigationView;
+import com.winlator.container.Container;
+import com.winlator.container.ContainerManager;
 import com.winlator.contentdialog.AboutDialog;
 import com.winlator.core.AppUtils;
 import com.winlator.core.Callback;
+import com.winlator.core.EnvVars;
 import com.winlator.core.LocaleHelper;
 import com.winlator.core.PreloaderDialog;
 import com.winlator.xenvironment.RootFSInstaller;
@@ -42,6 +45,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawerLayout;
     public final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
     private boolean editInputControls = false;
+    private boolean autoStartPending = false; // true only on a fresh app start (not on rotation / returning from the game)
     private int selectedProfileId;
     private Callback<Uri> openFileCallback;
     private SharedPreferences preferences;
@@ -76,6 +80,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int selectedMenuItemId = intent.getIntExtra("selected_menu_item_id", 0);
             int menuItemId = selectedMenuItemId > 0 ? selectedMenuItemId : (showShortcutsFirst ? R.id.menu_item_shortcuts : R.id.menu_item_containers);
 
+            autoStartPending = savedInstanceState == null && intent.getIntExtra("container_id", 0) == 0;
             actionBar.setHomeAsUpIndicator(R.drawable.icon_action_bar_menu);
             onNavigationItemSelected(navigationView.getMenu().findItem(menuItemId));
             navigationView.setCheckedItem(menuItemId);
@@ -205,6 +210,30 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 break;
         }
         return true;
+    }
+
+    // Re-reads containers from disk when the containers list is on screen (used after the default container is created).
+    public void reloadContainersList() {
+        if (currentFragment instanceof ContainersFragment) showFragment(new ContainersFragment());
+    }
+
+    // Starts the first native-game container (the one with NATIVE_EXEC) once per fresh app start.
+    // Turn it off with the preference "auto_start_container" = false.
+    public void autoStartContainer() {
+        if (!autoStartPending) return;
+        autoStartPending = false;
+        if (!preferences.getBoolean("auto_start_container", true)) return;
+
+        ContainerManager manager = new ContainerManager(this);
+        for (Container container : manager.getContainers()) {
+            String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
+            if (nativeExec != null && !nativeExec.isEmpty()) {
+                Intent intent = new Intent(this, XServerDisplayActivity.class);
+                intent.putExtra("container_id", container.id);
+                startActivity(intent);
+                return;
+            }
+        }
     }
 
     public void showFragment(Fragment fragment) {
