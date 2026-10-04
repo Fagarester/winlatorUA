@@ -13,7 +13,7 @@ public abstract class GraphicsDrivers {
     public static final String GLADIO = "gladio";
     public static final String OPENGL = "opengl";
     public static final String DEFAULT_VULKAN_DRIVER = VORTEK;
-    public static final String DEFAULT_OPENGL_DRIVER = GLADIO;
+    public static final String DEFAULT_OPENGL_DRIVER = ZINK;
 
     public static String getName(String identifier) {
         switch (identifier) {
