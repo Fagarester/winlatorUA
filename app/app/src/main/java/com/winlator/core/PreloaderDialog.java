@@ -2,6 +2,7 @@ package com.winlator.core;
 
 import android.app.Activity;
 import android.app.Dialog;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.TextView;
@@ -35,7 +36,11 @@ public class PreloaderDialog {
         if (isShowing()) return;
         close();
         if (dialog == null) create();
-        ((TextView)dialog.findViewById(R.id.TextView)).setText(textResId);
+        TextView textView = dialog.findViewById(R.id.TextView);
+        textView.setText(textResId);
+        // short "starting / loading" screens show only the splash image, long operations keep a small caption
+        boolean hideText = textResId == R.string.starting_up || textResId == R.string.loading;
+        textView.setVisibility(hideText ? View.GONE : View.VISIBLE);
         dialog.show();
     }
 
