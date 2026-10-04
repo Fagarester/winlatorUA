@@ -1,6 +1,8 @@
 package com.winlator.xenvironment;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import androidx.preference.PreferenceManager;
 
 import androidx.appcompat.app.AppCompatActivity;
 
@@ -9,6 +11,7 @@ import com.winlator.R;
 import com.winlator.SettingsFragment;
 import com.winlator.container.Container;
 import com.winlator.container.ContainerManager;
+import com.winlator.container.GraphicsDrivers;
 import com.winlator.core.AppUtils;
 import com.winlator.core.DownloadProgressDialog;
 import com.winlator.core.FileUtils;
@@ -70,6 +73,7 @@ public abstract class RootFSInstaller {
             if (success) {
                 rootFS.createRFSVersionFile(LATEST_VERSION);
                 resetContainerRFSVersions(activity);
+                activity.runOnUiThread(() -> createDefaultContainerIfNeeded(activity));
             }
             else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
 
@@ -80,6 +84,32 @@ public abstract class RootFSInstaller {
     public static void installIfNeeded(final MainActivity activity) {
         RootFS rootFS = RootFS.find(activity);
         if (!rootFS.isValid() || rootFS.getVersion() < LATEST_VERSION) install(activity);
+        else createDefaultContainerIfNeeded(activity);
+    }
+
+    // Creates one ready-to-run container (Turnip + Zink + Factorio variables) on the very first start.
+    // It is created only once: if the user later deletes all containers, it is not recreated.
+    public static void createDefaultContainerIfNeeded(final MainActivity activity) {
+        final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(activity);
+        if (preferences.getBoolean("default_container_created", false)) return;
+
+        final ContainerManager manager = new ContainerManager(activity);
+        if (!manager.getContainers().isEmpty()) {
+            preferences.edit().putBoolean("default_container_created", true).apply();
+            return;
+        }
+
+        try {
+            JSONObject data = new JSONObject();
+            data.put("name", "Factorio");
+            data.put("screenSize", Container.DEFAULT_SCREEN_SIZE);
+            data.put("envVars", Container.DEFAULT_ENV_VARS);
+            data.put("graphicsDriver", GraphicsDrivers.getDefaultDriver(activity));
+            manager.createContainerAsync(data, (container) -> {
+                if (container != null) preferences.edit().putBoolean("default_container_created", true).apply();
+            });
+        }
+        catch (JSONException e) {}
     }
 
     private static void clearOptDir(File optDir) {
