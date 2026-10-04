@@ -17,7 +17,10 @@ import java.io.File;
 import java.util.Iterator;
 
 public class Container {
-    public static final String DEFAULT_ENV_VARS = "ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_DISABLE=false MESA_SHADER_CACHE_MAX_SIZE=512MB mesa_glthread=true WINEESYNC=1 TU_DEBUG=noconform";
+    public static final String BASE_ENV_VARS = "ZINK_DESCRIPTORS=lazy ZINK_DEBUG=compact MESA_SHADER_CACHE_DISABLE=false MESA_SHADER_CACHE_MAX_SIZE=512MB mesa_glthread=true WINEESYNC=1 TU_DEBUG=noconform";
+    // Native ARM64 game (Factorio): the game folder is copied from NATIVE_SRC into the rootfs on first start.
+    public static final String NATIVE_ENV_VARS = "NATIVE_EXEC=/home/xuser/factorio/bin/arm64/factorio NATIVE_SRC=/storage/emulated/0/Download/factorio";
+    public static final String DEFAULT_ENV_VARS = BASE_ENV_VARS+" "+NATIVE_ENV_VARS;
     public static final String DEFAULT_SCREEN_SIZE = "1280x720";
     public static final String DEFAULT_AUDIO_DRIVER = AudioDrivers.ALSA;
     public static final String DEFAULT_DXWRAPPER = DXWrappers.DXVK;
@@ -396,7 +399,7 @@ public class Container {
                 int appVersion = Integer.parseInt(extraData.optString("appVersion", "0"));
 
                 if (appVersion < 16 && data.has("envVars")) {
-                    EnvVars defaultEnvVars = new EnvVars(DEFAULT_ENV_VARS);
+                    EnvVars defaultEnvVars = new EnvVars(BASE_ENV_VARS);
                     EnvVars envVars = new EnvVars(data.getString("envVars"));
                     for (String name : defaultEnvVars) if (!envVars.has(name)) envVars.put(name, defaultEnvVars.get(name));
                     data.put("envVars", envVars.toString());
