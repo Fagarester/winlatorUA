@@ -355,4 +355,6 @@
     <string name="full">Full</string>
     <string name="ddraw_wrapper" translatable="false">DDraw Wrapper</string>
     <string name="renderer">Renderer</string>
+    <string name="shortcut_container_settings">Container settings</string>
+    <string name="shortcut_app_settings">App settings</string>
 </resources>
