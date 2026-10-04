@@ -11,6 +11,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.MenuItem;
 
+import java.util.ArrayList;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,6 +34,7 @@ import com.winlator.core.Callback;
 import com.winlator.core.EnvVars;
 import com.winlator.core.LocaleHelper;
 import com.winlator.core.PreloaderDialog;
+import com.winlator.xenvironment.RootFS;
 import com.winlator.xenvironment.RootFSInstaller;
 
 public class MainActivity extends AppCompatActivity implements NavigationView.OnNavigationItemSelectedListener {
@@ -55,6 +57,14 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     protected void onCreate(Bundle savedInstanceState) {
         AppUtils.setActivityTheme(this);
         super.onCreate(savedInstanceState);
+
+        Intent startIntent = getIntent();
+        boolean openedByShortcutOrApp = startIntent.getStringExtra("shortcut_action") != null ||
+            startIntent.getBooleanExtra("edit_input_controls", false) ||
+            startIntent.getIntExtra("container_id", 0) != 0 ||
+            startIntent.getIntExtra("selected_menu_item_id", 0) != 0;
+        if (savedInstanceState == null && !openedByShortcutOrApp && tryFastAutoStart()) return;
+
         setContentView(R.layout.main_activity);
 
         drawerLayout = findViewById(R.id.DrawerLayout);
@@ -80,11 +90,19 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             int selectedMenuItemId = intent.getIntExtra("selected_menu_item_id", 0);
             int menuItemId = selectedMenuItemId > 0 ? selectedMenuItemId : (showShortcutsFirst ? R.id.menu_item_shortcuts : R.id.menu_item_containers);
 
-            autoStartPending = savedInstanceState == null && intent.getIntExtra("container_id", 0) == 0;
+            String shortcutAction = intent.getStringExtra("shortcut_action");
+            if ("app_settings".equals(shortcutAction)) menuItemId = R.id.menu_item_settings;
+
+            autoStartPending = savedInstanceState == null && shortcutAction == null && intent.getIntExtra("container_id", 0) == 0;
             actionBar.setHomeAsUpIndicator(R.drawable.icon_action_bar_menu);
             onNavigationItemSelected(navigationView.getMenu().findItem(menuItemId));
             navigationView.setCheckedItem(menuItemId);
             if (!requestAppPermissions()) RootFSInstaller.installIfNeeded(this);
+
+            if ("container_settings".equals(shortcutAction)) {
+                Container nativeContainer = findNativeContainer();
+                if (nativeContainer != null) showFragment(new ContainerDetailFragment(nativeContainer.id));
+            }
 
             int containerId = intent.getIntExtra("container_id", 0);
             String startPath = intent.getStringExtra("start_path");
@@ -217,6 +235,41 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (currentFragment instanceof ContainersFragment) showFragment(new ContainersFragment());
     }
 
+    // First container that has NATIVE_EXEC (native game); falls back to the first container.
+    private Container findNativeContainer() {
+        ArrayList<Container> containers = (new ContainerManager(this)).getContainers();
+        for (Container container : containers) {
+            String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
+            if (nativeExec != null && !nativeExec.isEmpty()) return container;
+        }
+        return containers.isEmpty() ? null : containers.get(0);
+    }
+
+    // Normal app start: if everything is installed, start the game right away and close this screen
+    // before any UI is created (no flash of the containers list, nothing underneath when the game exits).
+    private boolean tryFastAutoStart() {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+        if (!prefs.getBoolean("auto_start_container", true)) return false;
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) return false;
+
+        RootFS rootFS = RootFS.find(this);
+        if (!rootFS.isValid() || rootFS.getVersion() < RootFSInstaller.LATEST_VERSION) return false;
+
+        for (Container container : (new ContainerManager(this)).getContainers()) {
+            String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
+            if (nativeExec != null && !nativeExec.isEmpty()) {
+                Intent intent = new Intent(this, XServerDisplayActivity.class);
+                intent.putExtra("container_id", container.id);
+                startActivity(intent);
+                finish();
+                overridePendingTransition(0, 0);
+                return true;
+            }
+        }
+        return false;
+    }
+
     // Starts the first native-game container (the one with NATIVE_EXEC) once per fresh app start.
     // Turn it off with the preference "auto_start_container" = false.
     public void autoStartContainer() {
@@ -231,6 +284,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 Intent intent = new Intent(this, XServerDisplayActivity.class);
                 intent.putExtra("container_id", container.id);
                 startActivity(intent);
+                finish();
+                overridePendingTransition(0, 0);
                 return;
             }
         }
