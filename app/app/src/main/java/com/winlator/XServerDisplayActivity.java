@@ -425,6 +425,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         winHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
 
+        // Native-game container (NATIVE_EXEC): "Exit" closes the whole app. It must NOT restart the app,
+        // otherwise MainActivity starts again and the auto-start launches the game again (endless loop).
+        String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
+        if (nativeExec != null && !nativeExec.isEmpty()) {
+            finishAndRemoveTask();
+            new android.os.Handler(android.os.Looper.getMainLooper()).postDelayed(
+                () -> android.os.Process.killProcess(android.os.Process.myPid()), 300);
+            return;
+        }
+
         Intent intent = getIntent();
         if (intent.hasExtra("exec_path")) {
             AppUtils.RestartApplicationOptions options = new AppUtils.RestartApplicationOptions();
