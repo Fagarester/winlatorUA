@@ -21,7 +21,7 @@
         android:label="@string/app_name">
 
         <activity android:name="com.winlator.MainActivity"
-            android:theme="@style/AppThemeDark"
+            android:theme="@style/AppThemeLauncher"
             android:exported="true"
             android:screenOrientation="sensor"
             android:configChanges="keyboard|keyboardHidden|orientation|screenSize|screenLayout|smallestScreenSize|density|navigation">
@@ -29,6 +29,7 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <meta-data android:name="android.app.shortcuts" android:resource="@xml/shortcuts" />
         </activity>
 
         <activity android:name="com.winlator.XServerDisplayActivity"
