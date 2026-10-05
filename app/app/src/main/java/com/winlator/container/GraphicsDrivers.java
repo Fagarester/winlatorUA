@@ -40,25 +40,30 @@ public abstract class GraphicsDrivers {
             return new String[]{getName(TURNIP), getName(VORTEK)};
         }
         else if (apiName.equalsIgnoreCase("OPENGL")) {
-            return new String[]{getName(ZINK), getName(VIRGL), getName(GLADIO), getName(OPENGL)};
+            return new String[]{getName(ZINK), getName(VIRGL), getName(GLADIO)}; // "OpenGL" (native kgsl) removed: it does not work on stock Mesa
         }
         else return new String[0];
     }
 
     public static String[] parseIdentifiers(String graphicsDriver) {
-        if (graphicsDriver == null || graphicsDriver.isEmpty()) return new String[]{DEFAULT_VULKAN_DRIVER, DEFAULT_OPENGL_DRIVER};
-        if (graphicsDriver.contains(",")) {
-            return graphicsDriver.split(",");
+        String[] identifiers;
+        if (graphicsDriver == null || graphicsDriver.isEmpty()) identifiers = new String[]{DEFAULT_VULKAN_DRIVER, DEFAULT_OPENGL_DRIVER};
+        else if (graphicsDriver.contains(",")) {
+            identifiers = graphicsDriver.split(",");
         }
         else {
             if (isVulkanDriver(graphicsDriver)) {
-                return new String[]{graphicsDriver, DEFAULT_OPENGL_DRIVER};
+                identifiers = new String[]{graphicsDriver, DEFAULT_OPENGL_DRIVER};
             }
             else if (isOpenGLDriver(graphicsDriver)) {
-                return new String[]{DEFAULT_VULKAN_DRIVER, graphicsDriver};
+                identifiers = new String[]{DEFAULT_VULKAN_DRIVER, graphicsDriver};
             }
-            else return new String[]{DEFAULT_VULKAN_DRIVER, DEFAULT_OPENGL_DRIVER};
+            else identifiers = new String[]{DEFAULT_VULKAN_DRIVER, DEFAULT_OPENGL_DRIVER};
         }
+
+        // containers created earlier may still have the removed "opengl" driver saved -> use Zink instead
+        if (identifiers.length > 1 && OPENGL.equals(identifiers[1])) identifiers[1] = DEFAULT_OPENGL_DRIVER;
+        return identifiers;
     }
 
     public static KeyValueSet[] parseConfigs(String graphicsDriver, String graphicsDriverConfig) {
