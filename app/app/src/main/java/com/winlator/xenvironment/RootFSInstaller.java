@@ -75,7 +75,10 @@ public abstract class RootFSInstaller {
                 resetContainerRFSVersions(activity);
                 activity.runOnUiThread(() -> createDefaultContainerIfNeeded(activity));
             }
-            else AppUtils.showToast(activity, R.string.unable_to_install_system_files);
+            else {
+                AppUtils.showToast(activity, R.string.unable_to_install_system_files);
+                activity.runOnUiThread(activity::hideStartupCover);
+            }
 
             dialog.closeOnUiThread();
         });
@@ -115,9 +118,12 @@ public abstract class RootFSInstaller {
                     activity.reloadContainersList(); // show the new container in the list right away
                     activity.autoStartContainer();   // and start it
                 }
+                else activity.hideStartupCover();
             });
         }
-        catch (JSONException e) {}
+        catch (JSONException e) {
+            activity.hideStartupCover();
+        }
     }
 
     private static void clearOptDir(File optDir) {
