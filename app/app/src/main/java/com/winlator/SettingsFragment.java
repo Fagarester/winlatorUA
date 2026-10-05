@@ -132,7 +132,7 @@ public class SettingsFragment extends Fragment {
         
         final RadioGroup rgAppTheme = view.findViewById(R.id.RGAppTheme);
         
-int currentTheme = preferences.getInt("app_theme", APP_THEME_DARK);
+int currentTheme = preferences.getInt("app_theme", APP_THEME_DARK6);
 int oldAppThemeId;
 int newAppThemeId = APP_THEME_DARK;
 
