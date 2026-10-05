@@ -14,6 +14,12 @@
         android:scaleType="fitXY"
         android:contentDescription="@null" />
 
+    <!-- Factorio assembling machine as the loading animation (aspect 196:213) -->
+    <com.winlator.widget.AssemblerLoaderView
+        android:layout_width="150dp"
+        android:layout_height="163dp"
+        android:layout_gravity="center" />
+
     <!-- Small dim caption for long operations; hidden for the short "starting / loading" screens -->
     <TextView
         android:id="@+id/TextView"
