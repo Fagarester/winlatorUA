@@ -9,7 +9,10 @@ import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
 import android.os.Bundle;
+import android.graphics.Color;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 
 import java.util.ArrayList;
 import androidx.annotation.IntRange;
@@ -47,6 +50,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     private DrawerLayout drawerLayout;
     public final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
     private boolean editInputControls = false;
+    private View startupCover; // black overlay: hides the containers list during the very first start
     private boolean autoStartPending = false; // true only on a fresh app start (not on rotation / returning from the game)
     private int selectedProfileId;
     private Callback<Uri> openFileCallback;
@@ -94,6 +98,8 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             if ("app_settings".equals(shortcutAction)) menuItemId = R.id.menu_item_settings;
 
             autoStartPending = savedInstanceState == null && shortcutAction == null && intent.getIntExtra("container_id", 0) == 0;
+            if (autoStartPending && isFirstStart()) showStartupCover();
+
             actionBar.setHomeAsUpIndicator(R.drawable.icon_action_bar_menu);
             onNavigationItemSelected(navigationView.getMenu().findItem(menuItemId));
             navigationView.setCheckedItem(menuItemId);
@@ -235,6 +241,27 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
         if (currentFragment instanceof ContainersFragment) showFragment(new ContainersFragment());
     }
 
+    private boolean isFirstStart() {
+        RootFS rootFS = RootFS.find(this);
+        if (!rootFS.isValid() || rootFS.getVersion() < RootFSInstaller.LATEST_VERSION) return true;
+        return !PreferenceManager.getDefaultSharedPreferences(this).getBoolean("default_container_created", false);
+    }
+
+    public void showStartupCover() {
+        if (startupCover != null) return;
+        startupCover = new View(this);
+        startupCover.setBackgroundColor(Color.BLACK);
+        startupCover.setClickable(true);
+        addContentView(startupCover, new ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT));
+    }
+
+    public void hideStartupCover() {
+        if (startupCover == null) return;
+        ViewGroup parent = (ViewGroup)startupCover.getParent();
+        if (parent != null) parent.removeView(startupCover);
+        startupCover = null;
+    }
+
     // First container that has NATIVE_EXEC (native game); falls back to the first container.
     private Container findNativeContainer() {
         ArrayList<Container> containers = (new ContainerManager(this)).getContainers();
@@ -273,9 +300,15 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     // Starts the first native-game container (the one with NATIVE_EXEC) once per fresh app start.
     // Turn it off with the preference "auto_start_container" = false.
     public void autoStartContainer() {
-        if (!autoStartPending) return;
+        if (!autoStartPending) {
+            hideStartupCover();
+            return;
+        }
         autoStartPending = false;
-        if (!preferences.getBoolean("auto_start_container", true)) return;
+        if (!preferences.getBoolean("auto_start_container", true)) {
+            hideStartupCover();
+            return;
+        }
 
         ContainerManager manager = new ContainerManager(this);
         for (Container container : manager.getContainers()) {
@@ -289,6 +322,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
                 return;
             }
         }
+        hideStartupCover(); // no native container: show the normal containers list
     }
 
     public void showFragment(Fragment fragment) {
