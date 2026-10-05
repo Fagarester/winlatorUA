@@ -649,12 +649,22 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             rootView.addView(frameRating);
         }
 
+        boolean controlsProfileApplied = false;
         if (shortcut != null) {
             String controlsProfile = shortcut.getExtra("controlsProfile");
             if (!controlsProfile.isEmpty()) {
                 ControlsProfile profile = inputControlsManager.getProfile(Integer.parseInt(controlsProfile));
-                if (profile != null) showInputControls(profile);
+                if (profile != null) {
+                    showInputControls(profile);
+                    controlsProfileApplied = true;
+                }
             }
+        }
+
+        // Native game container (Factorio): the RTS controls profile is enabled automatically on start.
+        if (!controlsProfileApplied && isNativeGameContainer()) {
+            ControlsProfile defaultProfile = inputControlsManager.getProfile(DEFAULT_NATIVE_CONTROLS_PROFILE_ID);
+            if (defaultProfile != null) showInputControls(defaultProfile);
         }
 
         if (MainActivity.DEBUG_MODE) rootView.addView(AppUtils.createDebugMsgTextView(this));
@@ -713,6 +723,16 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         });
 
         dialog.show();
+    }
+
+    // id of the profile that is switched on automatically for native games:
+    // 1 = RTS (assets/inputcontrols/profiles/controls-1.icp), 2 = Template (12 buttons), 3 = Virtual Gamepad, 4 = FPS
+    private static final int DEFAULT_NATIVE_CONTROLS_PROFILE_ID = 1;
+
+    private boolean isNativeGameContainer() {
+        if (container == null) return false;
+        String nativeExec = (new EnvVars(container.getEnvVars())).get("NATIVE_EXEC");
+        return nativeExec != null && !nativeExec.isEmpty();
     }
 
     private void showInputControls(ControlsProfile profile) {
