@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.ActivityInfo;
 import android.content.pm.PackageManager;
 import android.content.res.Configuration;
 import android.net.Uri;
@@ -51,6 +52,7 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     public final PreloaderDialog preloaderDialog = new PreloaderDialog(this);
     private boolean editInputControls = false;
     private View startupCover; // black overlay: hides the containers list during the very first start
+    private boolean orientationLocked = false; // landscape is forced only during the very first start
     private boolean autoStartPending = false; // true only on a fresh app start (not on rotation / returning from the game)
     private int selectedProfileId;
     private Callback<Uri> openFileCallback;
@@ -68,6 +70,12 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
             startIntent.getIntExtra("container_id", 0) != 0 ||
             startIntent.getIntExtra("selected_menu_item_id", 0) != 0;
         if (savedInstanceState == null && !openedByShortcutOrApp && tryFastAutoStart()) return;
+
+        // very first start (installing system files): landscape only
+        if (savedInstanceState == null && !openedByShortcutOrApp && isFirstStart()) {
+            orientationLocked = true;
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR_LANDSCAPE);
+        }
 
         setContentView(R.layout.main_activity);
 
@@ -256,6 +264,10 @@ public class MainActivity extends AppCompatActivity implements NavigationView.On
     }
 
     public void hideStartupCover() {
+        if (orientationLocked) {
+            orientationLocked = false;
+            setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_SENSOR); // back to the normal (manifest) behaviour
+        }
         if (startupCover == null) return;
         ViewGroup parent = (ViewGroup)startupCover.getParent();
         if (parent != null) parent.removeView(startupCover);
