@@ -1,5 +1,6 @@
 package com.winlator.xserver;
 
+import android.view.KeyCharacterMap;
 import android.view.KeyEvent;
 
 import androidx.collection.ArraySet;
@@ -107,7 +108,9 @@ public class Keyboard {
             if (action == KeyEvent.ACTION_DOWN) {
                 boolean shiftPressed = event.isShiftPressed() || keyCode == KeyEvent.KEYCODE_AT || keyCode == KeyEvent.KEYCODE_STAR || keyCode == KeyEvent.KEYCODE_POUND || keyCode == KeyEvent.KEYCODE_PLUS;
                 if (shiftPressed) xServer.injectKeyPress(XKeycode.KEY_SHIFT_L);
-                xServer.injectKeyPress(xKeycode, xKeycode != XKeycode.KEY_ENTER ? event.getUnicodeChar() : 0);
+                int unicodeChar = event.getUnicodeChar();
+                if ((unicodeChar & KeyCharacterMap.COMBINING_ACCENT) != 0) unicodeChar = 0;
+                xServer.injectKeyPress(xKeycode, xKeycode != XKeycode.KEY_ENTER ? unicodeToKeysym(unicodeChar) : 0);
             }
             else if (action == KeyEvent.ACTION_UP) {
                 xServer.injectKeyRelease(XKeycode.KEY_SHIFT_L);
@@ -116,14 +119,32 @@ public class Keyboard {
         }
         else if (action == KeyEvent.ACTION_MULTIPLE) {
             String chars = event.getCharacters();
-            if (chars != null && chars.length() == 1) {
-                int keysym = chars.charAt(0);
-                XKeycode xKeycode = getCustomXKeycodeForKeysym(keysym);
-                xServer.injectKeyPress(xKeycode, keysym);
-                AppUtils.runDelayed(() -> xServer.injectKeyRelease(xKeycode), 30);
+            if (chars != null && !chars.isEmpty()) {
+                int delay = 0;
+                for (int i = 0; i < chars.length(); ) {
+                    final int keysym = unicodeToKeysym(chars.codePointAt(i));
+                    i += Character.charCount(chars.codePointAt(i));
+                    if (keysym == 0) continue;
+
+                    // several characters at once (word / autocomplete): type them one after another
+                    AppUtils.runDelayed(() -> {
+                        XKeycode xKeycode = getCustomXKeycodeForKeysym(keysym);
+                        xServer.injectKeyPress(xKeycode, keysym);
+                        AppUtils.runDelayed(() -> xServer.injectKeyRelease(xKeycode), 30);
+                    }, delay);
+                    delay += 60;
+                }
             }
         }
         return true;
+    }
+
+    // X11 keysym for a Unicode character: Latin-1 keeps its own value, everything else (Cyrillic, ...)
+    // must be sent as 0x01000000 + code point, otherwise clients cannot decode it.
+    private static int unicodeToKeysym(int codePoint) {
+        if (codePoint <= 0) return 0;
+        if (codePoint < 0x100) return codePoint;
+        return 0x01000000 | codePoint;
     }
 
     private XKeycode getCustomXKeycodeForKeysym(int keysym) {
