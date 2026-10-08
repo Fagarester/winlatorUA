@@ -19,7 +19,6 @@ import com.winlator.widget.LogView;
 import com.winlator.xconnector.UnixSocketConfig;
 import com.winlator.xenvironment.EnvironmentComponent;
 import com.winlator.xenvironment.RootFS;
-import com.winlator.xserver.XServer;
 
 import java.io.File;
 import java.util.List;
@@ -180,21 +179,13 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 }
                 extraArgs = " --config "+configFile.getPath();
             }
-            // Factorio saves its fullscreen window size into the very same --config ini file
-            // (which we now keep between launches so in-game graphics settings persist), so an
-            // old window size silently sticks even after the container's screen resolution is
-            // changed later. --window-size is an official CLI flag that always wins over any
-            // saved value, without touching (and discarding) the rest of the saved settings.
-            XServerComponent xServerComponent = environment.getComponent(XServerComponent.class);
-            if (xServerComponent != null) {
-                XServer nativeXServer = xServerComponent.getXServer();
-                if (nativeXServer != null) {
-                    extraArgs += " --window-size "+nativeXServer.screenInfo.width+"x"+nativeXServer.screenInfo.height;
-                }
-            }
-
             String nativeArgs = envVars.get("NATIVE_ARGS");
             if (nativeArgs != null && !nativeArgs.isEmpty()) extraArgs += " "+nativeArgs;
+
+            // The game is started through the glibc loader, so /proc/self/exe points to the loader and Factorio
+            // detects a wrong binaries path (rootfs/usr) -> "File .../usr/arm64/factorio not found" in the updater.
+            // --executable-path tells it where the real executable is.
+            if (extraArgs.indexOf("--executable-path") < 0) extraArgs += " --executable-path "+nativeFile.getPath();
 
             // NATIVE_MESA_SRC: use a Mesa build with the Freedreno/KGSL OpenGL driver (direct OpenGL, no Zink).
             //   NATIVE_MESA_SRC = /storage/emulated/0/Download/mesa   (folder that contains lib/ and dri/)
