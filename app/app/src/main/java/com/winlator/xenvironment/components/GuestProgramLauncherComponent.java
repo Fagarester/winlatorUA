@@ -196,11 +196,6 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             String nativeArgs = envVars.get("NATIVE_ARGS");
             if (nativeArgs != null && !nativeArgs.isEmpty()) extraArgs += " "+nativeArgs;
 
-            // The game is started through the glibc loader, so /proc/self/exe points to the loader and Factorio
-            // detects a wrong binaries path (rootfs/usr) -> "File .../usr/arm64/factorio not found" in the updater.
-            // --executable-path tells it where the real executable is.
-            if (extraArgs.indexOf("--executable-path") < 0) extraArgs += " --executable-path "+nativeFile.getPath();
-
             // NATIVE_MESA_SRC: use a Mesa build with the Freedreno/KGSL OpenGL driver (direct OpenGL, no Zink).
             //   NATIVE_MESA_SRC = /storage/emulated/0/Download/mesa   (folder that contains lib/ and dri/)
             // The folder is copied once into rootfs/opt/mesa-kgsl and put first in the library path.
@@ -229,6 +224,18 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                     envVars.remove("MESA_GL_VERSION_OVERRIDE");
                 }
             }
+
+            // Factorio does not know that it runs through the glibc loader:
+            //  - /proc/self/exe points to the loader, so it detects a wrong binaries path (rootfs/usr) and the updater fails
+            //    with "File .../usr/arm64/factorio not found"  -> --executable-path tells it where the executable is;
+            //  - after an update it restarts itself with execv(<executable-path>), and the real binary cannot be started
+            //    directly on Android (its ELF interpreter does not exist).
+            // So --executable-path points to a tiny launcher script located next to the real binary
+            // (bin/arm64/): it starts the real binary through the loader with the same arguments.
+            File launcherScript = new File(nativeFile.getParentFile(), "factorio-start.sh");
+            FileUtils.writeString(launcherScript, "#!/system/bin/sh\nexec "+loader+" --library-path "+libPath+" "+nativeFile.getPath()+" \"$@\"\n");
+            launcherScript.setExecutable(true, false);
+            if (extraArgs.indexOf("--executable-path") < 0) extraArgs += " --executable-path "+launcherScript.getPath();
 
             command = loader+" --library-path "+libPath+" "+nativeFile.getPath()+extraArgs;
             File workDir = nativeFile.getParentFile();
