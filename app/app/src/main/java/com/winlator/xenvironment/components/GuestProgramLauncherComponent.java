@@ -19,6 +19,7 @@ import com.winlator.widget.LogView;
 import com.winlator.xconnector.UnixSocketConfig;
 import com.winlator.xenvironment.EnvironmentComponent;
 import com.winlator.xenvironment.RootFS;
+import com.winlator.xserver.XServer;
 
 import java.io.File;
 import java.util.List;
@@ -179,6 +180,19 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
                 }
                 extraArgs = " --config "+configFile.getPath();
             }
+            // Factorio saves its fullscreen window size into the very same --config ini file
+            // (which we now keep between launches so in-game graphics settings persist), so an
+            // old window size silently sticks even after the container's screen resolution is
+            // changed later. --window-size is an official CLI flag that always wins over any
+            // saved value, without touching (and discarding) the rest of the saved settings.
+            XServerComponent xServerComponent = environment.getComponent(XServerComponent.class);
+            if (xServerComponent != null) {
+                XServer nativeXServer = xServerComponent.getXServer();
+                if (nativeXServer != null) {
+                    extraArgs += " --window-size "+nativeXServer.screenInfo.width+"x"+nativeXServer.screenInfo.height;
+                }
+            }
+
             String nativeArgs = envVars.get("NATIVE_ARGS");
             if (nativeArgs != null && !nativeArgs.isEmpty()) extraArgs += " "+nativeArgs;
 
