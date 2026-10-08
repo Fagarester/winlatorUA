@@ -241,6 +241,13 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             File workDir = nativeFile.getParentFile();
             if (workDir != null && workDir.isDirectory()) rootDir = workDir;
             envVars.remove("LD_PRELOAD");
+            // Factorio's updater restarts through factorio-start.sh, whose interpreter is
+            // Android's /system/bin/sh. Do not expose the rootfs glibc directory through
+            // LD_LIBRARY_PATH to Android executables: Android's linker would try to load
+            // rootfs/usr/lib/libc.so and fail with "bad ELF magic" before the script runs.
+            // The game and its restart script already pass the guest libraries explicitly
+            // with the glibc loader's --library-path argument.
+            envVars.remove("LD_LIBRARY_PATH");
 
             // Log the game output to Documents/Winlator/factorio-native.log (cheap, works without the debug window)
             File logDir = LogView.getLogFile().getParentFile();
