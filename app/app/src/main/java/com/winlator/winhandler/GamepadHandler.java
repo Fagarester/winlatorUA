@@ -3,6 +3,9 @@ package com.winlator.winhandler;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.hardware.input.InputManager;
+import android.os.Handler;
+import android.os.Looper;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -62,25 +65,34 @@ public class GamepadHandler {
 
     public synchronized void startBridge(File socketDir) {
         if (bridge != null) return;
-        bridge = new InterposerGamepadServer(socketDir, (slot, strongMotor, weakMotor) -> {
+        InterposerGamepadServer server = new InterposerGamepadServer(socketDir, (slot, strongMotor, weakMotor) -> {
             GamepadSlot gamepadSlot = gamepadSlots[slot];
             if (gamepadSlot != null) gamepadSlot.getGamepadVibration().vibrate(strongMotor, weakMotor);
         });
+        bridge = server;
 
-        bridgeDeviceListener = new InputManager.InputDeviceListener() {
-            @Override public void onInputDeviceAdded(int deviceId) { refreshBridge(); }
-            @Override public void onInputDeviceRemoved(int deviceId) { refreshBridge(); }
-            @Override public void onInputDeviceChanged(int deviceId) { }
-        };
-        InputManager inputManager = (InputManager)winHandler.activity.getSystemService(Context.INPUT_SERVICE);
-        if (inputManager != null) inputManager.registerInputDeviceListener(bridgeDeviceListener, null);
+        // NOTE: this is called from a background thread (no Looper), so the listener must be given
+        // the main looper explicitly, otherwise registerInputDeviceListener throws.
+        try {
+            bridgeDeviceListener = new InputManager.InputDeviceListener() {
+                @Override public void onInputDeviceAdded(int deviceId) { refreshBridge(); }
+                @Override public void onInputDeviceRemoved(int deviceId) { refreshBridge(); }
+                @Override public void onInputDeviceChanged(int deviceId) { }
+            };
+            InputManager inputManager = (InputManager)winHandler.activity.getSystemService(Context.INPUT_SERVICE);
+            if (inputManager != null) inputManager.registerInputDeviceListener(bridgeDeviceListener, new Handler(Looper.getMainLooper()));
+        }
+        catch (Exception e) {
+            Log.e("NativeGamepad", "device listener registration failed: "+e);
+            bridgeDeviceListener = null;
+        }
         refreshBridge();
     }
 
     public synchronized void stopBridge() {
         if (bridge == null) return;
         InputManager inputManager = (InputManager)winHandler.activity.getSystemService(Context.INPUT_SERVICE);
-        if (inputManager != null && bridgeDeviceListener != null) inputManager.unregisterInputDeviceListener(bridgeDeviceListener);
+        try { if (inputManager != null && bridgeDeviceListener != null) inputManager.unregisterInputDeviceListener(bridgeDeviceListener); } catch (Exception e) {}
         bridgeDeviceListener = null;
         bridge.stop();
         bridge = null;
@@ -93,9 +105,16 @@ public class GamepadHandler {
             updateGamepadSlots();
         }
         catch (Exception e) {
+            Log.e("NativeGamepad", "updateGamepadSlots failed: "+e);
             return;
         }
-        for (int i = 0; i < GAMEPAD_MAX_COUNT; i++) bridge.setSlotPresent(i, gamepadSlots[i] != null);
+        int count = 0;
+        for (int i = 0; i < GAMEPAD_MAX_COUNT; i++) {
+            boolean present = gamepadSlots[i] != null;
+            if (present) count++;
+            bridge.setSlotPresent(i, present);
+        }
+        Log.i("NativeGamepad", "refresh: "+count+" gamepad(s) attached");
     }
 
     private void updateGamepadSlots() {
@@ -280,7 +299,7 @@ public class GamepadHandler {
         return -1;
     }
 
-    private ExternalController getConnectedControllerById(int deviceId) {
+    private ExternalController findConnectedControllerById(int deviceId) {
         synchronized (connectedControllers) {
             for (ExternalController controller : connectedControllers) {
                 if (controller.getDeviceId() == deviceId) return controller;
@@ -288,6 +307,21 @@ public class GamepadHandler {
 
             return null;
         }
+    }
+
+    private long lastBridgeRefreshTime = 0;
+
+    private ExternalController getConnectedControllerById(int deviceId) {
+        ExternalController controller = findConnectedControllerById(deviceId);
+        if (controller == null && bridge != null) {
+            long now = System.currentTimeMillis();
+            if (now - lastBridgeRefreshTime > 1000) {
+                lastBridgeRefreshTime = now;
+                refreshBridge();
+                controller = findConnectedControllerById(deviceId);
+            }
+        }
+        return controller;
     }
 
     protected boolean onGenericMotionEvent(MotionEvent event) {
