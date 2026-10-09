@@ -563,9 +563,6 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             envVars.put("NATIVE_PRELOAD", libDir.getPath()+"/selkies_input_interposer.so:"+libDir.getPath()+"/libudev.so.1");
             envVars.put("SELKIES_JS_SOCKET_PATH", socketDir.getPath());
             envVars.put("SELKIES_REAL_LIBUDEV", "none");
-            if (!envVars.has("SDL_JOYSTICK_DEVICE")) {
-                envVars.put("SDL_JOYSTICK_DEVICE", "/dev/input/event1000:/dev/input/event1001:/dev/input/event1002:/dev/input/event1003");
-            }
 
             winHandler.gamepadHandler.startBridge(socketDir);
         }
@@ -906,7 +903,10 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
         // Native game with the gamepad bridge: pad buttons go to the game first, not to cursor/keyboard bindings
-        if (winHandler.gamepadHandler.isBridgeActive() && ExternalController.isGameController(event.getDevice()) && winHandler.onKeyEvent(event)) return true;
+        if (winHandler.gamepadHandler.isBridgeActive() && event.getKeyCode() != KeyEvent.KEYCODE_BACK && ExternalController.isGameController(event.getDevice())) {
+            winHandler.onKeyEvent(event);
+            return true; // never let pad buttons navigate the Android UI while a native game runs
+        }
         return (!inputControlsView.onKeyEvent(event) && !winHandler.onKeyEvent(event) && xServer.keyboard.onKeyEvent(event)) ||
                (!ExternalController.isGameController(event.getDevice()) && super.dispatchKeyEvent(event));
     }
