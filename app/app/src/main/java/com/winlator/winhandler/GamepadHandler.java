@@ -1,6 +1,8 @@
 package com.winlator.winhandler;
 
+import android.content.Context;
 import android.content.SharedPreferences;
+import android.hardware.input.InputManager;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -10,7 +12,9 @@ import com.winlator.inputcontrols.ExternalController;
 import com.winlator.inputcontrols.GamepadSlot;
 import com.winlator.inputcontrols.GamepadState;
 import com.winlator.inputcontrols.GamepadVibration;
+import com.winlator.widget.InputControlsView;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -48,6 +52,52 @@ public class GamepadHandler {
         this.winHandler = winHandler;
     }
 
+    // ---- Bridge for NATIVE (non-Wine) games: Selkies input interposer sockets ----
+    private InterposerGamepadServer bridge;
+    private InputManager.InputDeviceListener bridgeDeviceListener;
+
+    public boolean isBridgeActive() {
+        return bridge != null;
+    }
+
+    public synchronized void startBridge(File socketDir) {
+        if (bridge != null) return;
+        bridge = new InterposerGamepadServer(socketDir, (slot, strongMotor, weakMotor) -> {
+            GamepadSlot gamepadSlot = gamepadSlots[slot];
+            if (gamepadSlot != null) gamepadSlot.getGamepadVibration().vibrate(strongMotor, weakMotor);
+        });
+
+        bridgeDeviceListener = new InputManager.InputDeviceListener() {
+            @Override public void onInputDeviceAdded(int deviceId) { refreshBridge(); }
+            @Override public void onInputDeviceRemoved(int deviceId) { refreshBridge(); }
+            @Override public void onInputDeviceChanged(int deviceId) { }
+        };
+        InputManager inputManager = (InputManager)winHandler.activity.getSystemService(Context.INPUT_SERVICE);
+        if (inputManager != null) inputManager.registerInputDeviceListener(bridgeDeviceListener, null);
+        refreshBridge();
+    }
+
+    public synchronized void stopBridge() {
+        if (bridge == null) return;
+        InputManager inputManager = (InputManager)winHandler.activity.getSystemService(Context.INPUT_SERVICE);
+        if (inputManager != null && bridgeDeviceListener != null) inputManager.unregisterInputDeviceListener(bridgeDeviceListener);
+        bridgeDeviceListener = null;
+        bridge.stop();
+        bridge = null;
+    }
+
+    /** Re-reads the connected pads and creates / removes the virtual device of each slot. */
+    public synchronized void refreshBridge() {
+        if (bridge == null) return;
+        try {
+            updateGamepadSlots();
+        }
+        catch (Exception e) {
+            return;
+        }
+        for (int i = 0; i < GAMEPAD_MAX_COUNT; i++) bridge.setSlotPresent(i, gamepadSlots[i] != null);
+    }
+
     private void updateGamepadSlots() {
         if (gamepadPlayerConfigs == null) {
             SharedPreferences preferences = winHandler.activity.getPreferences();
@@ -57,7 +107,8 @@ public class GamepadHandler {
             }
         }
 
-        ControlsProfile profile = winHandler.activity.getInputControlsView().getProfile();
+        InputControlsView controlsView = winHandler.activity.getInputControlsView();
+        ControlsProfile profile = controlsView != null ? controlsView.getProfile() : null;
         boolean useVirtualGamepad = profile != null && profile.isVirtualGamepad();
 
         for (byte i = 0; i < GAMEPAD_MAX_COUNT; i++) gamepadSlots[i] = null;
@@ -178,6 +229,12 @@ public class GamepadHandler {
     }
 
     public void sendGamepadState(final GamepadSlot gamepadSlot) {
+        final InterposerGamepadServer bridgeServer = bridge;
+        if (bridgeServer != null) {
+            int bridgeSlot = ArrayUtils.indexOf(gamepadSlots, gamepadSlot);
+            if (bridgeSlot != ArrayUtils.INDEX_NOT_FOUND) bridgeServer.publish(bridgeSlot, gamepadSlot.getGamepadState());
+        }
+
         if (!winHandler.initReceived || gamepadClients.isEmpty()) return;
         final byte slot = (byte)ArrayUtils.indexOf(gamepadSlots, gamepadSlot);
         if (slot == ArrayUtils.INDEX_NOT_FOUND) return;
