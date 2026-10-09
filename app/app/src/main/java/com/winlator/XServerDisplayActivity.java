@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.KeyEvent;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -336,6 +337,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     protected void onDestroy() {
+        winHandler.gamepadHandler.stopBridge();
         winHandler.stop();
         if (environment != null) environment.stopEnvironmentComponents();
         super.onDestroy();
@@ -525,6 +527,53 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
         return false;
     }
 
+    // Native (non-Wine) games such as Factorio cannot use the Winlator xinput/dinput path. Instead the Selkies
+    // input interposer (LD_PRELOAD) gives the game a virtual "Xbox 360 pad" and we feed it from GamepadHandler.
+    // Needs assets/input_interposer/{selkies_input_interposer.so, libudev.so.1} built for aarch64 glibc.
+    // Disable with container env var NATIVE_GAMEPAD=0.
+    private void setupNativeGamepadBridge() {
+        try {
+            String nativeExec = envVars.get("NATIVE_EXEC");
+            if (nativeExec == null || nativeExec.isEmpty() || "0".equals(envVars.get("NATIVE_GAMEPAD"))) return;
+
+            String[] assets = getAssets().list("input_interposer");
+            boolean hasLibs = false;
+            if (assets != null) {
+                boolean a = false, b = false;
+                for (String name : assets) {
+                    if (name.equals("selkies_input_interposer.so")) a = true;
+                    else if (name.equals("libudev.so.1")) b = true;
+                }
+                hasLibs = a && b;
+            }
+            if (!hasLibs) {
+                Log.w("NativeGamepad", "assets/input_interposer/*.so not found, gamepad bridge disabled");
+                return;
+            }
+
+            File rootDir = rootFS.getRootDir();
+            File libDir = new File(rootDir, "opt/input_interposer");
+            FileUtils.copy(this, "input_interposer/selkies_input_interposer.so", new File(libDir, "selkies_input_interposer.so"));
+            FileUtils.copy(this, "input_interposer/libudev.so.1", new File(libDir, "libudev.so.1"));
+
+            File socketDir = new File(rootDir, "tmp/selkies-js");
+            FileUtils.delete(socketDir);
+            socketDir.mkdirs();
+
+            envVars.put("NATIVE_PRELOAD", libDir.getPath()+"/selkies_input_interposer.so:"+libDir.getPath()+"/libudev.so.1");
+            envVars.put("SELKIES_JS_SOCKET_PATH", socketDir.getPath());
+            envVars.put("SELKIES_REAL_LIBUDEV", "none");
+            if (!envVars.has("SDL_JOYSTICK_DEVICE")) {
+                envVars.put("SDL_JOYSTICK_DEVICE", "/dev/input/event1000:/dev/input/event1001:/dev/input/event1002:/dev/input/event1003");
+            }
+
+            winHandler.gamepadHandler.startBridge(socketDir);
+        }
+        catch (Exception e) {
+            Log.e("NativeGamepad", "bridge setup failed: "+e);
+        }
+    }
+
     private void setupXEnvironment() {
         String rootPath = rootFS.getRootDir().getPath();
         envVars.put("MESA_DEBUG", "silent");
@@ -601,6 +650,7 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
             envVars.putAll(overrideEnvVars);
             overrideEnvVars = null;
         }
+        setupNativeGamepadBridge();
         environment.startEnvironmentComponents();
 
         winHandler.start();
@@ -855,6 +905,8 @@ public class XServerDisplayActivity extends AppCompatActivity implements Navigat
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
+        // Native game with the gamepad bridge: pad buttons go to the game first, not to cursor/keyboard bindings
+        if (winHandler.gamepadHandler.isBridgeActive() && ExternalController.isGameController(event.getDevice()) && winHandler.onKeyEvent(event)) return true;
         return (!inputControlsView.onKeyEvent(event) && !winHandler.onKeyEvent(event) && xServer.keyboard.onKeyEvent(event)) ||
                (!ExternalController.isGameController(event.getDevice()) && super.dispatchKeyEvent(event));
     }
