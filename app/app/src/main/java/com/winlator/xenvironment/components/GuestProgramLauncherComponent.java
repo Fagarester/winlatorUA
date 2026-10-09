@@ -237,7 +237,12 @@ public class GuestProgramLauncherComponent extends EnvironmentComponent {
             launcherScript.setExecutable(true, false);
             if (extraArgs.indexOf("--executable-path") < 0) extraArgs += " --executable-path "+launcherScript.getPath();
 
-            command = loader+" --library-path "+libPath+" "+nativeFile.getPath()+extraArgs;
+            // NATIVE_PRELOAD: glibc libraries preloaded into the game only (input interposer + fake libudev for gamepads).
+            // --preload is used instead of LD_PRELOAD because LD_PRELOAD would also hit Android's /system/bin/sh
+            // (factorio-start.sh) and break it.
+            String nativePreload = envVars.get("NATIVE_PRELOAD");
+            String preloadArg = nativePreload != null && !nativePreload.isEmpty() ? " --preload "+nativePreload : "";
+            command = loader+preloadArg+" --library-path "+libPath+" "+nativeFile.getPath()+extraArgs;
             File workDir = nativeFile.getParentFile();
             if (workDir != null && workDir.isDirectory()) rootDir = workDir;
             envVars.remove("LD_PRELOAD");
