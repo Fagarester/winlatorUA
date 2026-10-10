@@ -6,6 +6,7 @@ import android.hardware.input.InputManager;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.Log;
+import android.view.InputDevice;
 import android.view.KeyEvent;
 import android.view.MotionEvent;
 
@@ -313,7 +314,7 @@ public class GamepadHandler {
 
     private ExternalController getConnectedControllerById(int deviceId) {
         ExternalController controller = findConnectedControllerById(deviceId);
-        if (controller == null && bridge != null) {
+        if (controller == null && bridge != null && ExternalController.isGameController(InputDevice.getDevice(deviceId))) {
             long now = System.currentTimeMillis();
             if (now - lastBridgeRefreshTime > 1000) {
                 lastBridgeRefreshTime = now;
